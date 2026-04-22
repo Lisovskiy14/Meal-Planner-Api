@@ -1,5 +1,6 @@
 ```plantuml
 @startuml
+left to right direction
 class Recipe {
     +Long id
     +String title
