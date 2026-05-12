@@ -2,13 +2,15 @@ package dev.lisovskiy.meal_planner_api.repository.entity;
 
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "recipe_ingredients")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RecipeIngredientEntity {
 
     @Id

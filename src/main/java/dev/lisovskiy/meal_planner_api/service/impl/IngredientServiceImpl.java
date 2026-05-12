@@ -6,7 +6,7 @@ import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.service.IngredientService;
-import dev.lisovskiy.meal_planner_api.service.exception.impl.IngredientNotFoundException;
+import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.IngredientNotFoundException;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

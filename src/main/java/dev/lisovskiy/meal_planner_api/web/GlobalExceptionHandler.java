@@ -1,6 +1,6 @@
 package dev.lisovskiy.meal_planner_api.web;
 
-import dev.lisovskiy.meal_planner_api.service.exception.NotFoundException;
+import dev.lisovskiy.meal_planner_api.service.exception.not_found.NotFoundException;
 import dev.lisovskiy.meal_planner_api.web.exception.ParamsValidationDetails;
 import dev.lisovskiy.meal_planner_api.web.exception.ProblemDetailBuilder;
 import org.springframework.http.*;

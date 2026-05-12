@@ -16,7 +16,7 @@ public class UpdateRecipeIngredientDto {
 
     @NotBlank(message = "is required")
     @ValidIngredientUnit
-    IngredientUnit unit;
+    String unit;
 
     @Min(value = 1, message = "must be at least 1")
     Double quantity;
