@@ -3,9 +3,14 @@ package dev.lisovskiy.meal_planner_api.service.impl;
 import dev.lisovskiy.meal_planner_api.domain.Ingredient;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
+import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
+import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.service.IngredientService;
+import dev.lisovskiy.meal_planner_api.service.exception.impl.IngredientNotFoundException;
+import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -13,28 +18,55 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IngredientServiceImpl implements IngredientService {
 
+    private final IngredientRepository ingredientRepository;
+    private final IngredientEntityMapper ingredientEntityMapper;
+
     @Override
+    @Transactional(readOnly = true)
     public List<Ingredient> getAllIngredients() {
-        return List.of();
+        return ingredientRepository.findAll().stream()
+                .map(ingredientEntityMapper::toIngredient)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Ingredient getIngredientById(Long id) {
-        return null;
+        IngredientEntity ingredientEntity = ingredientRepository.findById(id)
+                .orElseThrow(() -> new IngredientNotFoundException(id));
+        return ingredientEntityMapper.toIngredient(ingredientEntity);
     }
 
     @Override
+    @Transactional
     public Ingredient createIngredient(CreateIngredientDto createIngredientDto) {
-        return null;
+        IngredientEntity entity = IngredientEntity.builder()
+                .name(createIngredientDto.getName())
+                .description(createIngredientDto.getDescription())
+                .build();
+
+        entity = ingredientRepository.save(entity);
+
+        return ingredientEntityMapper.toIngredient(entity);
     }
 
     @Override
+    @Transactional
     public Ingredient updateIngredient(Long id, UpdateIngredientDto updateIngredientDto) {
-        return null;
+        IngredientEntity existingEntity = ingredientEntityMapper
+                .toIngredientEntity(getIngredientById(id));
+
+        existingEntity.setName(updateIngredientDto.getName());
+        existingEntity.setDescription(updateIngredientDto.getDescription());
+
+        existingEntity = ingredientRepository.save(existingEntity);
+
+        return ingredientEntityMapper.toIngredient(existingEntity);
     }
 
     @Override
+    @Transactional
     public void deleteIngredientById(Long id) {
-
+        ingredientRepository.deleteById(id);
     }
 }

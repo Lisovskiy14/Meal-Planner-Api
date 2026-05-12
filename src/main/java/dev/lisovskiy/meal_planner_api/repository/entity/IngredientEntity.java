@@ -1,13 +1,15 @@
 package dev.lisovskiy.meal_planner_api.repository.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "ingredients")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class IngredientEntity {
 
     @Id
@@ -17,4 +19,10 @@ public class IngredientEntity {
             sequenceName = "ingredient_seq"
     )
     private Long id;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "description")
+    private String description;
 }
