@@ -1,5 +1,6 @@
 package dev.lisovskiy.meal_planner_api.web;
 
+import dev.lisovskiy.meal_planner_api.service.exception.conflict.AlreadyExistsException;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.NotFoundException;
 import dev.lisovskiy.meal_planner_api.web.exception.ParamsValidationDetails;
 import dev.lisovskiy.meal_planner_api.web.exception.ProblemDetailBuilder;
@@ -68,6 +69,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleNotFound(AlreadyExistsException ex) {
+        ProblemDetail problemDetail = ProblemDetailBuilder.initBuilding()
+                .status(HttpStatus.CONFLICT)
+                .type(URI.create("urn:problem-type:conflict"))
+                .title("Resource Already Exists")
+                .detail(ex.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problemDetail);
     }
