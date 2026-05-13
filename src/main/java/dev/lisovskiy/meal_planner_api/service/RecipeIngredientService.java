@@ -7,8 +7,8 @@ import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.UpdateRecipeIngredie
 import java.util.List;
 
 public interface RecipeIngredientService {
-    List<RecipeIngredient> findAllRecipeIngredients();
-    RecipeIngredient findRecipeIngredientById(Long id);
+    List<RecipeIngredient> getAllRecipeIngredients();
+    RecipeIngredient getRecipeIngredientById(Long id);
     RecipeIngredient createRecipeIngredient(CreateRecipeIngredientDto createRecipeIngredientDto);
     RecipeIngredient updateRecipeIngredient(Long id, UpdateRecipeIngredientDto createRecipeIngredientDto);
     void deleteRecipeIngredientById(Long id);

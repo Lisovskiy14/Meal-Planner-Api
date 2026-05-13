@@ -29,7 +29,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RecipeIngredient> findAllRecipeIngredients() {
+    public List<RecipeIngredient> getAllRecipeIngredients() {
         return recipeIngredientRepository.findAll().stream()
                 .map(recipeIngredientEntityMapper::toRecipeIngredient)
                 .toList();
@@ -37,7 +37,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
     @Override
     @Transactional(readOnly = true)
-    public RecipeIngredient findRecipeIngredientById(Long id) {
+    public RecipeIngredient getRecipeIngredientById(Long id) {
         RecipeIngredientEntity recipeIngredientEntity = recipeIngredientRepository.findById(id)
                 .orElseThrow(() -> new RecipeIngredientNotFoundException(id));
         return recipeIngredientEntityMapper.toRecipeIngredient(recipeIngredientEntity);
@@ -63,7 +63,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional
     public RecipeIngredient updateRecipeIngredient(Long id, UpdateRecipeIngredientDto updateRecipeIngredientDto) {
-        RecipeIngredient recipeIngredient = findRecipeIngredientById(id);
+        RecipeIngredient recipeIngredient = getRecipeIngredientById(id);
         RecipeIngredientEntity recipeIngredientEntity = recipeIngredientEntityMapper
                 .toRecipeIngredientEntity(recipeIngredient);
 
