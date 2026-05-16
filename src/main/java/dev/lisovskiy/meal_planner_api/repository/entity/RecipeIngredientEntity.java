@@ -21,6 +21,10 @@ public class RecipeIngredientEntity {
     )
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipe_id", nullable = false)
+    private RecipeEntity recipe;
+
     @OneToOne
     @JoinColumn(name = "ingredient_id",  nullable = false)
     private IngredientEntity ingredient;
