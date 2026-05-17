@@ -11,6 +11,10 @@ public class CreateRecipeIngredientDto {
 
     @NotNull(message = "is required")
     @Min(value = 0, message = "must be higher or equals to 0")
+    Long recipeId;
+
+    @NotNull(message = "is required")
+    @Min(value = 0, message = "must be higher or equals to 0")
     Long ingredientId;
 
     @NotBlank(message = "is required")

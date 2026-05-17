@@ -1,9 +1,9 @@
 package dev.lisovskiy.meal_planner_api.repository.entity;
 
-import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,5 +37,5 @@ public class RecipeEntity {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true
     )
-    private List<RecipeIngredientEntity> recipeIngredients;
+    private List<RecipeIngredientEntity> recipeIngredients = new ArrayList<>();
 }

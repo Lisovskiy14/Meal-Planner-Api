@@ -9,7 +9,7 @@ import java.util.List;
 public interface RecipeIngredientService {
     List<RecipeIngredient> getAllRecipeIngredients();
     RecipeIngredient getRecipeIngredientById(Long id);
-    RecipeIngredient createRecipeIngredient(CreateRecipeIngredientDto createRecipeIngredientDto);
+    List<RecipeIngredient> createRecipeIngredients(List<CreateRecipeIngredientDto> createRecipeIngredientDtoList);
     RecipeIngredient updateRecipeIngredient(Long id, UpdateRecipeIngredientDto createRecipeIngredientDto);
     void deleteRecipeIngredientById(Long id);
 }

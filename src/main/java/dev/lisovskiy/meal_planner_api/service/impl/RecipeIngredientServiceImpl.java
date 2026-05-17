@@ -1,6 +1,7 @@
 package dev.lisovskiy.meal_planner_api.service.impl;
 
 import dev.lisovskiy.meal_planner_api.domain.Ingredient;
+import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.UpdateRecipeIngredientDto;
@@ -8,14 +9,17 @@ import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.service.IngredientService;
 import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
+import dev.lisovskiy.meal_planner_api.service.RecipeService;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.RecipeIngredientNotFoundException;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
+import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeIngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.IngredientUnitMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,6 +28,10 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final RecipeIngredientEntityMapper recipeIngredientEntityMapper;
+
+    private final RecipeService recipeService;
+    private final RecipeEntityMapper recipeEntityMapper;
+
     private final IngredientService ingredientService;
     private final IngredientEntityMapper ingredientEntityMapper;
 
@@ -45,19 +53,29 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
     @Override
     @Transactional
-    public RecipeIngredient createRecipeIngredient(CreateRecipeIngredientDto createRecipeIngredientDto) {
+    public List<RecipeIngredient> createRecipeIngredients(List<CreateRecipeIngredientDto> createRecipeIngredientDtoList) {
 
-        Ingredient ingredient = ingredientService.getIngredientById(createRecipeIngredientDto.getIngredientId());
+        List<RecipeIngredientEntity> recipeIngredientEntities = new ArrayList<>();
 
-        RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
-                .ingredient(ingredientEntityMapper.toIngredientEntity(ingredient))
-                .unit(IngredientUnitMapper.fromString(createRecipeIngredientDto.getUnit()))
-                .quantity(createRecipeIngredientDto.getQuantity())
-                .build();
+        for (CreateRecipeIngredientDto createRecipeIngredientDto : createRecipeIngredientDtoList) {
+            Recipe recipe = recipeService.getRecipeById(createRecipeIngredientDto.getRecipeId());
+            Ingredient ingredient = ingredientService.getIngredientById(createRecipeIngredientDto.getIngredientId());
 
-        recipeIngredientEntity = recipeIngredientRepository.save(recipeIngredientEntity);
+            RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
+                    .recipe(recipeEntityMapper.toRecipeEntity(recipe))
+                    .ingredient(ingredientEntityMapper.toIngredientEntity(ingredient))
+                    .unit(IngredientUnitMapper.fromString(createRecipeIngredientDto.getUnit()))
+                    .quantity(createRecipeIngredientDto.getQuantity())
+                    .build();
 
-        return recipeIngredientEntityMapper.toRecipeIngredient(recipeIngredientEntity);
+            recipeIngredientEntities.add(recipeIngredientEntity);
+        }
+
+        recipeIngredientEntities = recipeIngredientRepository.saveAll(recipeIngredientEntities);
+
+        return recipeIngredientEntities.stream()
+                .map(recipeIngredientEntityMapper::toRecipeIngredient)
+                .toList();
     }
 
     @Override

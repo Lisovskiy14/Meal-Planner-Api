@@ -45,14 +45,19 @@ public class RecipeIngredientController {
     }
 
     @PostMapping
-    public ResponseEntity<RecipeIngredientDto> createRecipeIngredient(
-            @RequestBody @Validated CreateRecipeIngredientDto createRecipeIngredientDto
+    public ResponseEntity<RecipeIngredientListDto> createRecipeIngredient(
+            @RequestBody @Validated List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
     ) {
-        RecipeIngredient recipeIngredient = recipeIngredientService
-                .createRecipeIngredient(createRecipeIngredientDto);
+        List<RecipeIngredient> recipeIngredients = recipeIngredientService
+                .createRecipeIngredients(createRecipeIngredientDtoList);
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(recipeIngredientWebMapper.toRecipeIngredientDto(recipeIngredient));
+                .body(new RecipeIngredientListDto(
+                        recipeIngredients.stream()
+                                .map(recipeIngredientWebMapper::toRecipeIngredientDto)
+                                .toList()
+                ));
     }
 
     @PutMapping("/{id}")
@@ -68,7 +73,7 @@ public class RecipeIngredientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<RecipeIngredientDto> deleteRecipeIngredientById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRecipeIngredientById(@PathVariable Long id) {
         recipeIngredientService.deleteRecipeIngredientById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .build();

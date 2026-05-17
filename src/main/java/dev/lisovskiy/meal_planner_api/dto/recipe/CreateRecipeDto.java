@@ -1,9 +1,12 @@
 package dev.lisovskiy.meal_planner_api.dto.recipe;
 
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Value;
+
+import java.util.List;
 
 @Value
 public class CreateRecipeDto {
@@ -18,4 +21,6 @@ public class CreateRecipeDto {
 
     @Min(value = 1, message = "must be at least 1 minute")
     int prepTimeMinutes;
+
+    List<CreateRecipeIngredientDto> recipeIngredients;
 }
