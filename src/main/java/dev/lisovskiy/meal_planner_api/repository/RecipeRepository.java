@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RecipeRepository extends JpaRepository<RecipeEntity, Long> {
+    boolean findByTitle(String title);
 }
