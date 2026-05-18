@@ -5,6 +5,7 @@ import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeListDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.UpdateRecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
 import dev.lisovskiy.meal_planner_api.service.RecipeFacade;
 import dev.lisovskiy.meal_planner_api.service.RecipeService;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeWebMapper;
@@ -40,7 +41,7 @@ public class RecipeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RecipeDto> getRecipeById(@PathVariable Long id) {
+    public ResponseEntity<RecipeDto> getRecipeById(@PathVariable @ValidLongId Long id) {
         Recipe recipe = recipeService.getRecipeById(id);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -59,7 +60,7 @@ public class RecipeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<RecipeDto> updateRecipeById(
-            @PathVariable Long id,
+            @PathVariable @ValidLongId Long id,
             @RequestBody @Validated UpdateRecipeDto updateRecipeDto
     ) {
         Recipe recipe = recipeService.updateRecipeById(id, updateRecipeDto);
@@ -69,7 +70,7 @@ public class RecipeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRecipeById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRecipeById(@PathVariable @ValidLongId Long id) {
         recipeService.deleteRecipeById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .build();

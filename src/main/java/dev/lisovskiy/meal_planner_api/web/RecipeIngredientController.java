@@ -5,6 +5,7 @@ import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredie
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.UpdateRecipeIngredientDto;
+import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
 import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeIngredientWebMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,9 @@ public class RecipeIngredientController {
     private final RecipeIngredientWebMapper recipeIngredientWebMapper;
 
     @GetMapping("/{recipeId}/ingredients")
-    public ResponseEntity<RecipeIngredientListDto> getAllRecipeIngredients(@PathVariable Long recipeId) {
+    public ResponseEntity<RecipeIngredientListDto> getAllRecipeIngredients(
+            @PathVariable @ValidLongId Long recipeId
+    ) {
         List<RecipeIngredient> recipeIngredients = recipeIngredientService.getAllRecipeIngredients(recipeId);
 
         return ResponseEntity.status(HttpStatus.OK)
@@ -39,7 +42,8 @@ public class RecipeIngredientController {
 
     @GetMapping("/{recipeId}/ingredients/{ingredientId}")
     public ResponseEntity<RecipeIngredientDto> getRecipeIngredientById(
-            @PathVariable Long recipeId, @PathVariable Long ingredientId
+            @PathVariable @ValidLongId Long recipeId,
+            @PathVariable @ValidLongId Long ingredientId
     ) {
         RecipeIngredient recipeIngredient = recipeIngredientService
                 .getRecipeIngredientById(recipeId, ingredientId);
@@ -51,7 +55,7 @@ public class RecipeIngredientController {
 
     @PostMapping("/{recipeId}/ingredients")
     public ResponseEntity<RecipeIngredientListDto> createRecipeIngredients(
-            @PathVariable Long recipeId,
+            @PathVariable @ValidLongId Long recipeId,
             @RequestBody @Validated List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
     ) {
         List<RecipeIngredient> recipeIngredients = recipeIngredientService
@@ -68,7 +72,8 @@ public class RecipeIngredientController {
 
     @PutMapping("/{recipeId}/ingredients/{ingredientId}")
     public ResponseEntity<RecipeIngredientDto> updateRecipeIngredientById(
-            @PathVariable Long recipeId, @PathVariable Long ingredientId,
+            @PathVariable @ValidLongId Long recipeId,
+            @PathVariable @ValidLongId Long ingredientId,
             @RequestBody @Validated UpdateRecipeIngredientDto updateRecipeIngredientDto
     ) {
         RecipeIngredient recipeIngredient = recipeIngredientService
@@ -84,7 +89,8 @@ public class RecipeIngredientController {
 
     @DeleteMapping("/{recipeId}/ingredients/{ingredientId}")
     public ResponseEntity<Void> deleteRecipeIngredientById(
-            @PathVariable Long recipeId, @PathVariable Long ingredientId
+            @PathVariable @ValidLongId Long recipeId,
+            @PathVariable @ValidLongId Long ingredientId
     ) {
         recipeIngredientService.deleteRecipeIngredientById(recipeId, ingredientId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)

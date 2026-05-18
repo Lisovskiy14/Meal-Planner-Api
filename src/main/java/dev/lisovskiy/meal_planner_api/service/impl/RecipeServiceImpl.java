@@ -3,7 +3,6 @@ package dev.lisovskiy.meal_planner_api.service.impl;
 import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.UpdateRecipeDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.service.RecipeService;

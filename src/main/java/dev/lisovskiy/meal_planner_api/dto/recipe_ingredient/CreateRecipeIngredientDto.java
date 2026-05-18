@@ -1,6 +1,7 @@
 package dev.lisovskiy.meal_planner_api.dto.recipe_ingredient;
 
 import dev.lisovskiy.meal_planner_api.dto.validation.ValidIngredientUnit;
+import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +11,7 @@ import lombok.Value;
 public class CreateRecipeIngredientDto {
 
     @NotNull(message = "is required")
-    @Min(value = 0, message = "must be higher or equals to 0")
+    @ValidLongId
     Long ingredientId;
 
     @NotBlank(message = "is required")
