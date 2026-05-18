@@ -21,7 +21,7 @@ public class RecipeIngredientEntity {
     @JoinColumn(name = "recipe_id", nullable = false)
     private RecipeEntity recipe;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("ingredientId")
     @JoinColumn(name = "ingredient_id",  nullable = false)
     private IngredientEntity ingredient;

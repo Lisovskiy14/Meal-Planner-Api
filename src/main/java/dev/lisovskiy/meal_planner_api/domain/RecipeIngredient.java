@@ -7,7 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RecipeIngredient {
-    private Long id;
     private Ingredient ingredient;
     private IngredientUnit unit;
     private Double quantity;

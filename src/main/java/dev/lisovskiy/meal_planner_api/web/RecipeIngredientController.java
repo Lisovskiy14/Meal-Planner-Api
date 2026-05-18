@@ -17,16 +17,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/recipe-ingredients")
+@RequestMapping("/api/v1/recipes")
 @RequiredArgsConstructor
 public class RecipeIngredientController {
 
     private final RecipeIngredientService recipeIngredientService;
     private final RecipeIngredientWebMapper recipeIngredientWebMapper;
 
-    @GetMapping
-    public ResponseEntity<RecipeIngredientListDto> getAllRecipeIngredients() {
-        List<RecipeIngredient> recipeIngredients = recipeIngredientService.getAllRecipeIngredients();
+    @GetMapping("/{recipeId}/ingredients")
+    public ResponseEntity<RecipeIngredientListDto> getAllRecipeIngredients(@PathVariable Long recipeId) {
+        List<RecipeIngredient> recipeIngredients = recipeIngredientService.getAllRecipeIngredients(recipeId);
+
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RecipeIngredientListDto(
@@ -36,20 +37,25 @@ public class RecipeIngredientController {
                 ));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<RecipeIngredientDto> getRecipeIngredientById(@PathVariable Long id) {
-        RecipeIngredient recipeIngredient = recipeIngredientService.getRecipeIngredientById(id);
+    @GetMapping("/{recipeId}/ingredients/{ingredientId}")
+    public ResponseEntity<RecipeIngredientDto> getRecipeIngredientById(
+            @PathVariable Long recipeId, @PathVariable Long ingredientId
+    ) {
+        RecipeIngredient recipeIngredient = recipeIngredientService
+                .getRecipeIngredientById(recipeId, ingredientId);
+
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(recipeIngredientWebMapper.toRecipeIngredientDto(recipeIngredient));
     }
 
-    @PostMapping
-    public ResponseEntity<RecipeIngredientListDto> createRecipeIngredient(
+    @PostMapping("/{recipeId}/ingredients")
+    public ResponseEntity<RecipeIngredientListDto> createRecipeIngredients(
+            @PathVariable Long recipeId,
             @RequestBody @Validated List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
     ) {
         List<RecipeIngredient> recipeIngredients = recipeIngredientService
-                .createRecipeIngredients(createRecipeIngredientDtoList);
+                .createRecipeIngredients(recipeId, createRecipeIngredientDtoList);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -60,21 +66,27 @@ public class RecipeIngredientController {
                 ));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{recipeId}/ingredients/{ingredientId}")
     public ResponseEntity<RecipeIngredientDto> updateRecipeIngredientById(
-            @PathVariable Long id,
+            @PathVariable Long recipeId, @PathVariable Long ingredientId,
             @RequestBody @Validated UpdateRecipeIngredientDto updateRecipeIngredientDto
     ) {
         RecipeIngredient recipeIngredient = recipeIngredientService
-                .updateRecipeIngredient(id, updateRecipeIngredientDto);
+                .updateRecipeIngredientById(
+                        recipeId, ingredientId,
+                        updateRecipeIngredientDto
+                );
+
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(recipeIngredientWebMapper.toRecipeIngredientDto(recipeIngredient));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRecipeIngredientById(@PathVariable Long id) {
-        recipeIngredientService.deleteRecipeIngredientById(id);
+    @DeleteMapping("/{recipeId}/ingredients/{ingredientId}")
+    public ResponseEntity<Void> deleteRecipeIngredientById(
+            @PathVariable Long recipeId, @PathVariable Long ingredientId
+    ) {
+        recipeIngredientService.deleteRecipeIngredientById(recipeId, ingredientId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .build();
     }

@@ -9,7 +9,6 @@ import lombok.Value;
 
 @Value
 public class RecipeIngredientDto {
-    Long id;
     IngredientDto ingredient;
     IngredientUnit unit;
     Double quantity;

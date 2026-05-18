@@ -2,8 +2,7 @@ package dev.lisovskiy.meal_planner_api.repository.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -11,6 +10,8 @@ import java.util.Objects;
 @Embeddable
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RecipeIngredientId implements Serializable {
 
     @Column(name = "recipe_id")

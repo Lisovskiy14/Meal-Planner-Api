@@ -31,7 +31,7 @@ public class RecipeFacadeImpl implements RecipeFacade {
         }
 
         List<RecipeIngredient> recipeIngredients = recipeIngredientService
-                .createRecipeIngredients(createRecipeIngredientDtoList);
+                .createRecipeIngredients(recipe.getId(), createRecipeIngredientDtoList);
 
         recipe.setRecipeIngredients(recipeIngredients);
 
