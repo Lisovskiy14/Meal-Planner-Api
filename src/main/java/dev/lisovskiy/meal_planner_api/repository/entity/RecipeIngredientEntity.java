@@ -13,19 +13,16 @@ import lombok.*;
 @AllArgsConstructor
 public class RecipeIngredientEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recipe_ingredient_seq_gen")
-    @SequenceGenerator(
-            name = "recipe_ingredient_seq_gen",
-            sequenceName = "recipe_ingredient_seq"
-    )
-    private Long id;
+    @EmbeddedId
+    private RecipeIngredientId id = new RecipeIngredientId();
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("recipeId")
     @JoinColumn(name = "recipe_id", nullable = false)
     private RecipeEntity recipe;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("ingredientId")
     @JoinColumn(name = "ingredient_id",  nullable = false)
     private IngredientEntity ingredient;
 
