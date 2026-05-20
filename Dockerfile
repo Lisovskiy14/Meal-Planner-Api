@@ -8,6 +8,7 @@ COPY build.gradle settings.gradle ./
 
 RUN ./gradlew dependencies --no-daemon
 
+COPY lombok.config .
 COPY src src
 
 RUN ./gradlew build -x test --no-daemon

@@ -27,7 +27,7 @@ databaseChangeLog:
                   name: quantity
                   type: DOUBLE PRECISION
 
-        - addForeignConstraint:
+        - addForeignKeyConstraint:
             baseTableName: recipe_ingredients
             baseColumnNames: recipe_id
             referencedTableName: recipes
@@ -35,7 +35,7 @@ databaseChangeLog:
             constraintName: fk_recipe_ingredients_recipe
             onDelete: CASCADE
 
-        - addForeignConstraint:
+        - addForeignKeyConstraint:
             baseTableName: recipe_ingredients
             baseColumnNames: ingredient_id
             referencedTableName: ingredients
