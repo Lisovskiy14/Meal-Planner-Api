@@ -1,5 +1,8 @@
 package dev.lisovskiy.meal_planner_api.web;
 
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
@@ -12,9 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
-import tools.jackson.databind.ObjectMapper;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
@@ -23,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("IngredientController IT")
 public class IngredientControllerIT extends AbstractIT {
+
+    private final String SCHEMA_TAG = "Ingredients";
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,7 +44,7 @@ public class IngredientControllerIT extends AbstractIT {
 
     @Test
     @SneakyThrows
-    @DisplayName("Should Save Category")
+    @DisplayName("Should Save Ingredient")
     public void shouldSaveIngredient() {
         String name = "Ingredient 1";
         String description = "Description of ingredient 1";
@@ -72,15 +77,27 @@ public class IngredientControllerIT extends AbstractIT {
         assertThat(actualResult)
                 .isEqualTo(expectedResult);
 
+        assertThat(ingredientRepository.existsById(actualResult.getId()))
+            .isTrue();
+
         resultActions.andDo(document("create-ingredient",
-                requestFields(
-                        fieldWithPath("name").description("Name of new ingredient"),
-                        fieldWithPath("description").description("Description of new ingredient")
-                ),
-                responseFields(
-                        fieldWithPath("id").description("Identifier"),
-                        fieldWithPath("name").description("Name of created ingredient"),
-                        fieldWithPath("description").description("Description of created ingredient")
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create a new ingredient")
+                                .description("Saves a new ingredient to the database and returns the created entity.")
+                                .requestSchema(Schema.schema("CreateIngredientDto"))
+                                .responseSchema(Schema.schema("IngredientDto"))
+                                .requestFields(
+                                        fieldWithPath("name").description("Name of new ingredient"),
+                                        fieldWithPath("description").description("Description of new ingredient")
+                                )
+                                .responseFields(
+                                    fieldWithPath("id").description("Identifier"),
+                                    fieldWithPath("name").description("Name of created ingredient"),
+                                    fieldWithPath("description").description("Description of created ingredient")
+                                )
+                                .build()
                 )
         ));
     }

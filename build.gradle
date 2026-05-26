@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.5'
+	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.epages.restdocs-api-spec' version '0.19.4'
 }
@@ -20,12 +20,12 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-liquibase'
 //	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.mapstruct:mapstruct:1.6.3'
-	implementation 'org.webjars:swagger-ui:5.31.0'
+	implementation 'org.liquibase:liquibase-core:4.31.1'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
@@ -34,14 +34,11 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-	testImplementation 'org.springframework.boot:spring-boot-restdocs'
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.4'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:testcontainers:1.21.4'
 	testImplementation 'org.testcontainers:postgresql:1.21.4'
 	testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
 //	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
@@ -52,12 +49,6 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
-tasks.register('copyOpenApi', Copy) {
-	dependsOn 'openapi3'
-	from layout.buildDirectory.file("api-spec/openapi3.yaml")
-	into layout.buildDirectory.dir("resources/main/static")
-}
-
 tasks.named('test') {
 	useJUnitPlatform()
 }
@@ -66,13 +57,49 @@ tasks.named('jar') {
 	enabled = false
 }
 
+def loadEnvFile(String filename) {
+	def envFile = file(filename)
+	def envMap = [:]
+
+	if (envFile.exists()) {
+		envFile.eachLine { line ->
+			def trimmedLine = line.trim()
+			if (trimmedLine && !trimmedLine.startsWith('#')) {
+				def parts = trimmedLine.split('=', 2)
+				if (parts.length == 2) {
+					def key = parts[0].trim()
+					def value = parts[1].trim().replaceAll(/^"|"$/, '').replaceAll(/^'|'$/, '')
+					envMap[key] = value
+				}
+			}
+		}
+	} else {
+		println "Warning: Provided environment file '${filename}' not found."
+	}
+
+	return envMap
+}
+
 tasks.named('bootRun') {
-	dependsOn 'copyOpenApi'
+	dependsOn 'openapi3'
+
+	environment loadEnvFile('backend.env')
+	environment loadEnvFile('db.env')
+
+	doFirst {
+		copy {
+			from layout.buildDirectory.file("api-spec/openapi3.yaml")
+			into layout.buildDirectory.dir("resources/main/static")
+		}
+	}
 }
 
 tasks.named('bootJar') {
 	archiveFileName = 'app.jar'
-	dependsOn 'copyOpenApi'
+	dependsOn 'openapi3'
+	from(layout.buildDirectory.dir("api-spec")) {
+		into "BOOT-INF/classes/static"
+	}
 }
 
 openapi3 {

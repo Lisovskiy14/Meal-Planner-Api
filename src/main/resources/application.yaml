@@ -34,3 +34,11 @@ spring:
   liquibase:
     change-log: classpath:liquibase/changelog.yaml
     enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    url: /openapi3.yaml
+    path: /swagger-ui.html
+  packages-to-scan: none
