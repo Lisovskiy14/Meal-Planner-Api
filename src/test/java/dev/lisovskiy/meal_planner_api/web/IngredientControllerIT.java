@@ -4,14 +4,18 @@ import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.config.ResponseSnippetsContainer;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
+import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.web.mapper.IngredientWebMapper;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -20,6 +24,7 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,11 +46,16 @@ public class IngredientControllerIT extends AbstractIT {
     @Autowired
     private IngredientWebMapper ingredientWebMapper;
 
+    @AfterEach
+    public void cleanUp() {
+        ingredientRepository.deleteAll();
+    }
 
     @Test
     @SneakyThrows
-    @DisplayName("Should Save Ingredient")
-    public void shouldSaveIngredient() {
+    @DisplayName("Create Ingredient - Should Save And Return Ingredient")
+    public void saveIngredient_shouldSaveAndReturnIngredient() {
+        // Arrange
         String name = "Ingredient 1";
         String description = "Description of ingredient 1";
 
@@ -54,6 +64,7 @@ public class IngredientControllerIT extends AbstractIT {
                 description
         );
 
+        // Act
         ResultActions resultActions = mockMvc.perform(
                 post("/api/v1/ingredients")
                         .contentType(APPLICATION_JSON_VALUE)
@@ -63,6 +74,7 @@ public class IngredientControllerIT extends AbstractIT {
 
         MvcResult mvcResult = resultActions.andReturn();
 
+        // Assert
         IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
 
         assertThat(actualResult).isNotNull();
@@ -80,7 +92,8 @@ public class IngredientControllerIT extends AbstractIT {
         assertThat(ingredientRepository.existsById(actualResult.getId()))
             .isTrue();
 
-        resultActions.andDo(document("create-ingredient",
+        // Documentation
+        resultActions.andDo(document("create-ingredient-created",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
@@ -96,6 +109,54 @@ public class IngredientControllerIT extends AbstractIT {
                                     fieldWithPath("id").description("Identifier"),
                                     fieldWithPath("name").description("Name of created ingredient"),
                                     fieldWithPath("description").description("Description of created ingredient")
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Create Ingredient - Should Return 409 Conflict")
+    public void saveIngredient_shouldReturn409Conflict() {
+        // Arrange
+        String name = "Ingredient 1";
+
+        IngredientEntity alreadyExistingIngredient = IngredientEntity.builder()
+                .name(name)
+                .description("Some description")
+                .build();
+
+        ingredientRepository.save(alreadyExistingIngredient);
+
+        CreateIngredientDto createIngredientDto = new CreateIngredientDto(
+                name,
+                "Some description"
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/ingredients")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createIngredientDto)));
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        assertThat(ingredientRepository.count())
+                .isEqualTo(1);
+
+        // Documentation
+        resultActions.andDo(document("create-ingredient-conflict",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create a new ingredient")
+                                .description("Returns 409 Conflict if an ingredient with the same name already exists.")
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        ResponseSnippetsContainer.getProblemDetailFields()
                                 )
                                 .build()
                 )
