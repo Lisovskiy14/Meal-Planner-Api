@@ -1,4 +1,4 @@
-package dev.lisovskiy.meal_planner_api.config;
+package dev.lisovskiy.meal_planner_api.util;
 
 import org.springframework.restdocs.payload.FieldDescriptor;
 
@@ -6,7 +6,7 @@ import java.util.List;
 
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 
-public class ResponseSnippetsContainer {
+public class GlobalDtoSnippetsProvider {
 
     public static List<FieldDescriptor> getProblemDetailFields() {
         return List.of(

@@ -4,9 +4,11 @@ import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
-import dev.lisovskiy.meal_planner_api.config.ResponseSnippetsContainer;
+import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
+import dev.lisovskiy.meal_planner_api.util.IngredientDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
+import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientListDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.web.mapper.IngredientWebMapper;
@@ -15,9 +17,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
@@ -53,6 +60,75 @@ public class IngredientControllerIT extends AbstractIT {
 
     @Test
     @SneakyThrows
+    @DisplayName("Get All Ingredients - Should Return a List")
+    public void getAllIngredients_shouldReturnList() {
+        // Arrange
+        List<IngredientEntity> ingredientEntities = List.of(
+                IngredientEntity.builder()
+                        .name("Ingredient 1")
+                        .description("Description of Ingredient 1")
+                        .build(),
+                IngredientEntity.builder()
+                        .name("Ingredient 2")
+                        .description("Description of Ingredient 2")
+                        .build(),
+                IngredientEntity.builder()
+                        .name("Ingredient 3")
+                        .description("Description of Ingredient 3")
+                        .build()
+        );
+
+        ingredientRepository.saveAll(ingredientEntities);
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/ingredients")
+                        .accept(APPLICATION_JSON_VALUE));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        IngredientListDto actualResult = getObjectFromMvcResult(mvcResult, IngredientListDto.class);
+
+        resultActions.andExpect(status().isOk());
+
+        assertThat(actualResult)
+                .isNotNull()
+                .hasFieldOrProperty("ingredients");
+
+        assertThat(actualResult.getIngredients())
+                .isNotEmpty()
+                .hasSize(ingredientEntities.size());
+
+        // Documentation
+        FieldDescriptor ingredientsField = fieldWithPath("ingredients")
+                .type(JsonFieldType.ARRAY)
+                .description("List of ingredients");
+
+        List<FieldDescriptor> ingredientDtoListFields = Stream.concat(
+                Stream.of(ingredientsField),
+                IngredientDtoSnippetsProvider.getIngredientDtoFieldsWithPrefix("ingredients[]").stream()
+        ).toList();
+
+        resultActions.andDo(document("get-all-ingredients-ok",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get all ingredients")
+                                .description("Gets all existing ingredients.")
+                                .responseSchema(Schema.schema("IngredientListDto"))
+                                .responseFields(
+                                        ingredientDtoListFields
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
     @DisplayName("Create Ingredient - Should Save And Return Ingredient")
     public void saveIngredient_shouldSaveAndReturnIngredient() {
         // Arrange
@@ -69,12 +145,13 @@ public class IngredientControllerIT extends AbstractIT {
                 post("/api/v1/ingredients")
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE)
-                        .content(objectMapper.writeValueAsString(createIngredientDto)))
-                .andExpect(status().isCreated());
+                        .content(objectMapper.writeValueAsString(createIngredientDto)));
 
         MvcResult mvcResult = resultActions.andReturn();
 
         // Assert
+        resultActions.andExpect(status().isCreated());
+
         IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
 
         assertThat(actualResult).isNotNull();
@@ -106,9 +183,7 @@ public class IngredientControllerIT extends AbstractIT {
                                         fieldWithPath("description").description("Description of new ingredient")
                                 )
                                 .responseFields(
-                                    fieldWithPath("id").description("Identifier"),
-                                    fieldWithPath("name").description("Name of created ingredient"),
-                                    fieldWithPath("description").description("Description of created ingredient")
+                                    IngredientDtoSnippetsProvider.getIngredientDtoFields()
                                 )
                                 .build()
                 )
@@ -156,7 +231,7 @@ public class IngredientControllerIT extends AbstractIT {
                                 .description("Returns 409 Conflict if an ingredient with the same name already exists.")
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .responseFields(
-                                        ResponseSnippetsContainer.getProblemDetailFields()
+                                        GlobalDtoSnippetsProvider.getProblemDetailFields()
                                 )
                                 .build()
                 )
