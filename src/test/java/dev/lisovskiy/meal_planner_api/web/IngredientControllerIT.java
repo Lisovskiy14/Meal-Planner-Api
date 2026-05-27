@@ -92,8 +92,6 @@ public class IngredientControllerIT extends AbstractIT {
 
         IngredientListDto actualResult = getObjectFromMvcResult(mvcResult, IngredientListDto.class);
 
-        resultActions.andExpect(status().isOk());
-
         assertThat(actualResult)
                 .isNotNull()
                 .hasFieldOrProperty("ingredients");
@@ -121,6 +119,95 @@ public class IngredientControllerIT extends AbstractIT {
                                 .responseSchema(Schema.schema("IngredientListDto"))
                                 .responseFields(
                                         ingredientDtoListFields
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Get Ingredient By Id - Should Return Ingredient")
+    public void getIngredientById_shouldReturnIngredient() {
+        // Arrange
+        String name = "Ingredient 1";
+        String description = "Description of Ingredient 1";
+
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name(name)
+                .description(description)
+                .build();
+
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        Long id = ingredientEntity.getId();
+
+        IngredientDto expectedResult = new IngredientDto(
+                ingredientEntity.getId(),
+                name,
+                description
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/ingredients/{id}", id)
+                        .accept(APPLICATION_JSON_VALUE));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
+
+        assertThat(actualResult)
+                .isNotNull()
+                .isEqualTo(expectedResult);
+
+        // Documentation
+        resultActions.andDo(document("get-ingredient-by-id-ok",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get ingredient by ID")
+                                .description("Gets an ingredient by its ID if exists.")
+                                .responseSchema(Schema.schema("IngredientDto"))
+                                .responseFields(
+                                        IngredientDtoSnippetsProvider.getIngredientDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Get Ingredient By Id - Should Return 404 Not Found")
+    public void getIngredientById_shouldReturn404NotFound() {
+        // Arrange
+        Long id = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/ingredients/{id}", id)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(ingredientRepository.existsById(id))
+                .isFalse();
+
+        // Documentation
+        resultActions.andDo(document("get-ingredient-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get ingredient by ID")
+                                .description("Gets an ingredient by its ID if exists.")
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        GlobalDtoSnippetsProvider.getProblemDetailFields()
                                 )
                                 .build()
                 )
