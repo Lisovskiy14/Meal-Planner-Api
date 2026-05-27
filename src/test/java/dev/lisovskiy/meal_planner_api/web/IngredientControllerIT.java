@@ -15,12 +15,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -157,6 +157,46 @@ public class IngredientControllerIT extends AbstractIT {
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .responseFields(
                                         ResponseSnippetsContainer.getProblemDetailFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Delete Ingredient By Id - Should Delete And Return 204 No Content")
+    public void deleteIngredientById_shouldDeleteAndReturn204NoContent() {
+        // Arrange
+        IngredientEntity existingIngredient = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Some description")
+                .build();
+
+        existingIngredient = ingredientRepository.save(existingIngredient);
+
+        Long id = existingIngredient.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                delete("/api/v1/ingredients/{id}", id)
+                        .accept(APPLICATION_JSON_VALUE));
+
+        // Assert
+        resultActions.andExpect(status().isNoContent());
+
+        assertThat(ingredientRepository.existsById(id))
+                .isFalse();
+
+        // Documentation
+        resultActions.andDo(document("delete-ingredient-no-content",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Delete an ingredient")
+                                .description("Deletes an ingredient by its ID if exists.")
+                                .pathParameters(
+                                        parameterWithName("id").description("Identifier of the ingredient to be deleted.")
                                 )
                                 .build()
                 )
