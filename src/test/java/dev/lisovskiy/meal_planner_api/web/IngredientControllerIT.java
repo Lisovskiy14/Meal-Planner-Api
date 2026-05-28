@@ -272,11 +272,63 @@ public class IngredientControllerIT extends AbstractIT {
                                 .requestSchema(Schema.schema("CreateIngredientDto"))
                                 .responseSchema(Schema.schema("IngredientDto"))
                                 .requestFields(
-                                        fieldWithPath("name").description("Name of new ingredient"),
-                                        fieldWithPath("description").description("Description of new ingredient")
+                                        IngredientDtoSnippetsProvider.getCreateIngredientDtoFields()
                                 )
                                 .responseFields(
                                     IngredientDtoSnippetsProvider.getIngredientDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Create Ingredient - Should Return 400 Bad Request")
+    public void createIngredient_shouldReturn400BadRequest() {
+        // Arrange
+        String name = "n".repeat(101);
+        String description = "s".repeat(1001);
+
+        CreateIngredientDto createIngredientDto = new CreateIngredientDto(
+                name,
+                description
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/ingredients")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createIngredientDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = getObjectFromMvcResult(mvcResult, ProblemDetail.class);
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Documentation
+        resultActions.andDo(document("create-ingredient-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update ingredient by ID")
+                                .description("Updates and returns an ingredient if exists.")
+                                .requestSchema(Schema.schema("CreateIngredientDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        GlobalDtoSnippetsProvider.getProblemDetailFieldsWithErrorsProperty()
                                 )
                                 .build()
                 )
@@ -395,8 +447,7 @@ public class IngredientControllerIT extends AbstractIT {
                                 .requestSchema(Schema.schema("UpdateIngredientDto"))
                                 .responseSchema(Schema.schema("IngredientDto"))
                                 .requestFields(
-                                        fieldWithPath("name").description("New name of existing ingredient"),
-                                        fieldWithPath("description").description("New description of existing ingredient")
+                                        IngredientDtoSnippetsProvider.getUpdateIngredientDtoFields()
                                 )
                                 .responseFields(
                                         IngredientDtoSnippetsProvider.getIngredientDtoFields()
@@ -408,8 +459,8 @@ public class IngredientControllerIT extends AbstractIT {
 
     @Test
     @SneakyThrows
-    @DisplayName("Update Ingredient By Id - Should Return 403 Bad Request")
-    public void updateIngredient_shouldReturn403BadRequest() {
+    @DisplayName("Update Ingredient By Id - Should Return 400 Bad Request")
+    public void updateIngredient_shouldReturn400BadRequest() {
         // Arrange
         Long id = 1L;
 

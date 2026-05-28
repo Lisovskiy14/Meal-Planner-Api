@@ -21,14 +21,14 @@ public class IngredientDtoSnippetsProvider {
         );
     }
 
-    public static List<FieldDescriptor> getCreateIngredientDtoFieldsWithPrefix() {
+    public static List<FieldDescriptor> getCreateIngredientDtoFields() {
         return List.of(
                 fieldWithPath("name").description("Name of new ingredient"),
                 fieldWithPath("description").description("Description of new ingredient")
         );
     }
 
-    public static List<FieldDescriptor> getUpdateIngredientDtoFieldsWithPrefix() {
+    public static List<FieldDescriptor> getUpdateIngredientDtoFields() {
         return List.of(
                 fieldWithPath("name").description("New name of existing ingredient"),
                 fieldWithPath("description").description("New description of existing ingredient")
