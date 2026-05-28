@@ -6,6 +6,7 @@ import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
@@ -14,8 +15,10 @@ import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
+import dev.lisovskiy.meal_planner_api.service.mapper.RecipeIngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipeIngredientDtoSnippetProvider;
+import dev.lisovskiy.meal_planner_api.web.mapper.RecipeIngredientWebMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +63,11 @@ public class RecipeIngredientControllerIT extends AbstractIT {
     @Autowired
     private IngredientRepository ingredientRepository;
 
+    @Autowired
+    private RecipeIngredientEntityMapper recipeIngredientEntityMapper;
+
+    @Autowired
+    private RecipeIngredientWebMapper recipeIngredientWebMapper;
 
     @AfterEach
     public void cleanUp() {
@@ -202,6 +210,79 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                                 .description("Identifier of the target recipe.")
                                 )
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeIngredientById - Should Return RecipeIngredient")
+    public void getRecipeIngredientById_shouldReturnRecipeIngredient() {
+        // Arrange
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of Ingredient 1")
+                .build();
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
+                .recipe(recipeEntity)
+                .ingredient(ingredientEntity)
+                .unit(IngredientUnit.GRAMS)
+                .quantity(80.0)
+                .build();
+        recipeIngredientEntity = recipeIngredientRepository.save(recipeIngredientEntity);
+
+        RecipeIngredientDto expectedResult = recipeIngredientWebMapper.toRecipeIngredientDto(
+                recipeIngredientEntityMapper.toRecipeIngredient(recipeIngredientEntity)
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeEntity.getId(), ingredientEntity.getId())
+                        .accept(APPLICATION_JSON_VALUE));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        RecipeIngredientDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeIngredientDto.class, objectMapper
+        );
+
+        assertThat(actualResult)
+                .isNotNull()
+                .isEqualTo(expectedResult);
+
+        // Document
+        resultActions.andDo(document("get-recipe-ingredient-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get recipe ingredient")
+                                .description("Gets recipe ingredient by its ID, that is composed of both, recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .responseSchema(Schema.schema("RecipeIngredientDto"))
+                                .responseFields(
+                                        RecipeIngredientDtoSnippetProvider.getRecipeIngredientDtoFields()
+                                )
                                 .build()
                 )
         ));
