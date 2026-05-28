@@ -4,6 +4,8 @@ import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
+import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.util.IngredientDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ProblemDetail;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,6 +52,9 @@ public class IngredientControllerIT extends AbstractIT {
 
     @Autowired
     private IngredientRepository ingredientRepository;
+
+    @Autowired
+    private IngredientEntityMapper ingredientEntityMapper;
 
     @Autowired
     private IngredientWebMapper ingredientWebMapper;
@@ -217,7 +223,7 @@ public class IngredientControllerIT extends AbstractIT {
     @Test
     @SneakyThrows
     @DisplayName("Create Ingredient - Should Save And Return Ingredient")
-    public void saveIngredient_shouldSaveAndReturnIngredient() {
+    public void createIngredient_shouldSaveAndReturnIngredient() {
         // Arrange
         String name = "Ingredient 1";
         String description = "Description of ingredient 1";
@@ -280,7 +286,7 @@ public class IngredientControllerIT extends AbstractIT {
     @Test
     @SneakyThrows
     @DisplayName("Create Ingredient - Should Return 409 Conflict")
-    public void saveIngredient_shouldReturn409Conflict() {
+    public void createIngredient_shouldReturn409Conflict() {
         // Arrange
         String name = "Ingredient 1";
 
@@ -316,6 +322,238 @@ public class IngredientControllerIT extends AbstractIT {
                                 .tag(SCHEMA_TAG)
                                 .summary("Create a new ingredient")
                                 .description("Returns 409 Conflict if an ingredient with the same name already exists.")
+                                .requestSchema(Schema.schema("CreateIngredientDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        GlobalDtoSnippetsProvider.getProblemDetailFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Update Ingredient By Id - Should Update and Return")
+    public void updateIngredient_shouldUpdateAndReturn() {
+        // Arrange
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of ingredient 1")
+                .build();
+
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        Long id = ingredientEntity.getId();
+        String updatedName = "Updated Ingredient 1";
+        String updatedDescription = "Updated Description of ingredient 1";
+
+        UpdateIngredientDto updateIngredientDto = new UpdateIngredientDto(
+                updatedName,
+                updatedDescription
+        );
+
+        IngredientDto expectedResult = new IngredientDto(
+                id,
+                updatedName,
+                updatedDescription
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/ingredients/{id}", id)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(updateIngredientDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
+
+        assertThat(actualResult)
+                .isNotNull()
+                .isEqualTo(expectedResult);
+
+        ingredientEntity = ingredientRepository.findById(id).get();
+        IngredientDto ingredientInDatabase = ingredientWebMapper.toIngredientDto(
+                ingredientEntityMapper.toIngredient(ingredientEntity)
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(ingredientInDatabase);
+
+        // Documentation
+        resultActions.andDo(document("update-ingredient-by-id-ok",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update ingredient by ID")
+                                .description("Updates and returns an ingredient if exists.")
+                                .requestSchema(Schema.schema("UpdateIngredientDto"))
+                                .responseSchema(Schema.schema("IngredientDto"))
+                                .requestFields(
+                                        fieldWithPath("name").description("New name of existing ingredient"),
+                                        fieldWithPath("description").description("New description of existing ingredient")
+                                )
+                                .responseFields(
+                                        IngredientDtoSnippetsProvider.getIngredientDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Update Ingredient By Id - Should Return 403 Bad Request")
+    public void updateIngredient_shouldReturn403BadRequest() {
+        // Arrange
+        Long id = 1L;
+
+        UpdateIngredientDto updateIngredientDto = new UpdateIngredientDto(
+                "i",
+                "desc"
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/ingredients/{id}", id)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateIngredientDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = getObjectFromMvcResult(mvcResult, ProblemDetail.class);
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Documentation
+        resultActions.andDo(document("update-ingredient-by-id-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update ingredient by ID")
+                                .description("Updates and returns an ingredient if exists.")
+                                .requestSchema(Schema.schema("UpdateIngredientDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        GlobalDtoSnippetsProvider.getProblemDetailFieldsWithErrorsProperty()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Update Ingredient By Id - Should Return 404 Not Found")
+    public void updateIngredient_shouldReturn404NotFound() {
+        // Arrange
+
+        Long id = 1L;
+
+        UpdateIngredientDto updateIngredientDto = new UpdateIngredientDto(
+                "Some Ingredient name",
+                "Some Ingredient description"
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/ingredients/{id}", id)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateIngredientDto)));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(ingredientRepository.existsById(id))
+                .isFalse();
+
+        // Documentation
+        resultActions.andDo(document("update-ingredient-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update ingredient by ID")
+                                .description("Updates and returns an ingredient if exists.")
+                                .requestSchema(Schema.schema("UpdateIngredientDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .responseFields(
+                                        GlobalDtoSnippetsProvider.getProblemDetailFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Update Ingredient By Id - Should Return 409 Conflict")
+    public void updateIngredient_shouldReturn409Conflict() {
+        // Arrange
+        String updatedName = "Ingredient 2";
+
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of ingredient 1")
+                .build();
+
+        IngredientEntity anotherIngredientEntity = IngredientEntity.builder()
+                .name("Ingredient 2")
+                .description("Description of ingredient 2")
+                .build();
+
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+        ingredientRepository.save(anotherIngredientEntity);
+
+        Long id = ingredientEntity.getId();
+
+        UpdateIngredientDto updateIngredientDto = new UpdateIngredientDto(
+                updatedName,
+                "Updated description of Ingredient 1"
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/ingredients/{id}", id)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateIngredientDto)));
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        assertThat(ingredientRepository.existsByName(updatedName))
+                .isTrue();
+
+        ingredientEntity = ingredientRepository.findById(id).get();
+
+        assertThat(ingredientEntity.getName())
+                .isNotEqualTo(updatedName);
+
+        // Documentation
+        resultActions.andDo(document("update-ingredient-by-id-conflict",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update ingredient by ID")
+                                .description("Updates and returns an ingredient if exists.")
+                                .requestSchema(Schema.schema("UpdateIngredientDto"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .responseFields(
                                         GlobalDtoSnippetsProvider.getProblemDetailFields()

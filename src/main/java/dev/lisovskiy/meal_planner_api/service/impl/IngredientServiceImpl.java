@@ -62,7 +62,13 @@ public class IngredientServiceImpl implements IngredientService {
         IngredientEntity existingEntity = ingredientEntityMapper
                 .toIngredientEntity(getIngredientById(id));
 
-        existingEntity.setName(updateIngredientDto.getName());
+        String updatedName = updateIngredientDto.getName();
+        if (!existingEntity.getName().equals(updatedName) &&
+                ingredientRepository.existsByName(updatedName)) {
+            throw new IngredientAlreadyExistsException(updatedName);
+        }
+
+        existingEntity.setName(updatedName);
         existingEntity.setDescription(updateIngredientDto.getDescription());
 
         existingEntity = ingredientRepository.save(existingEntity);
