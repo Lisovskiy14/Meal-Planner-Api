@@ -35,6 +35,7 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithNam
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -165,6 +166,42 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                         Stream.concat(rootField, nestedRecipeIngredientListFields)
                                                 .toList()
                                 )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetAllRecipeIngredients - Should Return 404 Not Found")
+    public void getAllRecipeIngredients_shouldReturn404NotFound() {
+        // Arrange
+        Long recipeId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{recipeId}/ingredients", recipeId)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(recipeRepository.existsById(recipeId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-all-recipe-ingredients-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get all recipe ingredients")
+                                .description("Get all recipe ingredients by recipe ID.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
