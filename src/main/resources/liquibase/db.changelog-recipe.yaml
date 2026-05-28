@@ -29,6 +29,11 @@ databaseChangeLog:
                   type: TEXT
                   constraints:
                     nullable: false
+              - column:
+                  name: prep_time_minutes
+                  type: INTEGER
+                  constraints:
+                    nullable: false
 
         - addUniqueConstraint:
             tableName: recipes

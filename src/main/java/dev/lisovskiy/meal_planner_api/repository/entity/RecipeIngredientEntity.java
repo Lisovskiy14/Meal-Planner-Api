@@ -14,6 +14,7 @@ import lombok.*;
 public class RecipeIngredientEntity {
 
     @EmbeddedId
+    @Builder.Default
     private RecipeIngredientId id = new RecipeIngredientId();
 
     @ManyToOne(fetch = FetchType.LAZY)

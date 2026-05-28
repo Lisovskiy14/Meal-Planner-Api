@@ -2,6 +2,7 @@ package dev.lisovskiy.meal_planner_api.web;
 
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
@@ -177,6 +178,11 @@ public class IngredientControllerIT extends AbstractIT {
                                 .tag(SCHEMA_TAG)
                                 .summary("Get ingredient by ID")
                                 .description("Gets an ingredient by its ID if exists.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the ingredient.")
+                                )
                                 .responseSchema(Schema.schema("IngredientDto"))
                                 .responseFields(
                                         IngredientDtoSnippetsProvider.getIngredientDtoFields()
@@ -444,6 +450,11 @@ public class IngredientControllerIT extends AbstractIT {
                                 .tag(SCHEMA_TAG)
                                 .summary("Update ingredient by ID")
                                 .description("Updates and returns an ingredient if exists.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the ingredient to be updated.")
+                                )
                                 .requestSchema(Schema.schema("UpdateIngredientDto"))
                                 .responseSchema(Schema.schema("IngredientDto"))
                                 .requestFields(
@@ -647,7 +658,9 @@ public class IngredientControllerIT extends AbstractIT {
                                 .summary("Delete an ingredient")
                                 .description("Deletes an ingredient by its ID if exists.")
                                 .pathParameters(
-                                        parameterWithName("id").description("Identifier of the ingredient to be deleted.")
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the ingredient to be deleted.")
                                 )
                                 .build()
                 )
