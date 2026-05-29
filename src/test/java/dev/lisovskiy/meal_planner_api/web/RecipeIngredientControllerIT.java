@@ -6,6 +6,7 @@ import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
@@ -461,6 +462,88 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                                 .description("Identifier of the target ingredient.")
                                 )
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipeIngredients - Should Create and Return RecipeIngredients")
+    public void createRecipeIngredients_shouldCreateAndReturnRecipeIngredients() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of Ingredient 1")
+                .build();
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        Long recipeId = recipeEntity.getId();
+        Long ingredientId = ingredientEntity.getId();
+
+        IngredientUnit unit = IngredientUnit.GRAMS;
+        Double quantity = 43.0;
+
+        List<CreateRecipeIngredientDto> createRecipeIngredientDtoList = List.of(
+                new CreateRecipeIngredientDto(ingredientId, unit.toString(), quantity)
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes/{recipeId}/ingredients", recipeId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createRecipeIngredientDtoList)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isCreated());
+
+        RecipeIngredientListDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeIngredientListDto.class, objectMapper
+        );
+
+        assertThat(actualResult)
+                .isNotNull();
+
+        assertThat(actualResult.getRecipeIngredients())
+                .isNotEmpty()
+                .hasSize(1);
+
+        RecipeIngredientDto returnedRecipeIngredientDto = actualResult.getRecipeIngredients().getFirst();
+
+        assertThat(returnedRecipeIngredientDto.getIngredient().getId())
+                .isEqualTo(ingredientId);
+        assertThat(returnedRecipeIngredientDto.getUnit())
+                .isEqualTo(unit);
+        assertThat(returnedRecipeIngredientDto.getQuantity())
+                .isEqualTo(quantity);
+
+        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
+        assertThat(recipeIngredientRepository.existsById(recipeIngredientId))
+                .isTrue();
+
+        // Document
+        resultActions.andDo(document("create-recipe-ingredient",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe ingredient")
+                                .description("Creates a relation between targeting Recipe and Ingredients.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe.")
+                                )
+                                .responseSchema(Schema.schema("RecipeIngredientListDto"))
                                 .build()
                 )
         ));
