@@ -49,6 +49,9 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional(readOnly = true)
     public RecipeIngredient getRecipeIngredientById(Long recipeId, Long ingredientId) {
+        recipeService.getRecipeById(recipeId);
+        ingredientService.getIngredientById(ingredientId);
+
         RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
 
         RecipeIngredientEntity recipeIngredientEntity = recipeIngredientRepository.findById(recipeIngredientId)

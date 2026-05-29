@@ -35,7 +35,8 @@ public class RecipeEntity {
     @OneToMany(
             mappedBy = "recipe",
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
     private List<RecipeIngredientEntity> recipeIngredients = new ArrayList<>();
 }

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ProblemDetail;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -283,6 +284,183 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                 .responseFields(
                                         RecipeIngredientDtoSnippetProvider.getRecipeIngredientDtoFields()
                                 )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeIngredientById - Should Return 404 Not Found")
+    public void getRecipeIngredientById_shouldReturn404NotFound() {
+        // Arrange
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of Ingredient 1")
+                .build();
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long recipeId = recipeEntity.getId();
+        Long ingredientId = ingredientEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeId, ingredientId)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getDetail())
+                .matches(".*Ingredient.*not found.*in recipe.*");
+
+        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
+        assertThat(recipeIngredientRepository.existsById(recipeIngredientId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-recipe-ingredient-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get recipe ingredient")
+                                .description("Gets recipe ingredient by its ID, that is composed of both, recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeIngredientById - Should Return 404 Not Found on Recipe")
+    public void getRecipeIngredientById_shouldReturn404NotFoundOnRecipe() {
+        // Arrange
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of Ingredient 1")
+                .build();
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        Long recipeId = 1L;
+        Long ingredientId = ingredientEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeId, ingredientId)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getDetail())
+                .matches(".*Recipe.*not found.*");
+
+        assertThat(recipeRepository.existsById(recipeId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-recipe-ingredient-by-id-not-found-on-recipe",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get recipe ingredient")
+                                .description("Gets recipe ingredient by its ID, that is composed of both, recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeIngredientById - Should Return 404 Not Found on Ingredient")
+    public void getRecipeIngredientById_shouldReturn404NotFoundOnIngredient() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long recipeId = recipeEntity.getId();
+        Long ingredientId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeId, ingredientId)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getDetail())
+                .matches(".*Ingredient.*not found.*");
+
+        assertThat(ingredientRepository.existsById(ingredientId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-recipe-ingredient-by-id-not-found-on-ingredient",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get recipe ingredient")
+                                .description("Gets recipe ingredient by its ID, that is composed of both, recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
