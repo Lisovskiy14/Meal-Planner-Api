@@ -1,15 +1,14 @@
 package dev.lisovskiy.meal_planner_api.service.impl;
 
-import dev.lisovskiy.meal_planner_api.domain.Ingredient;
-import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.UpdateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
+import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
-import dev.lisovskiy.meal_planner_api.service.IngredientService;
+import dev.lisovskiy.meal_planner_api.service.IngredientServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.service.RecipeService;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.RecipeIngredientNotFoundException;
@@ -34,7 +33,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     private final RecipeService recipeService;
     private final RecipeEntityMapper recipeEntityMapper;
 
-    private final IngredientService ingredientService;
+    private final IngredientServiceCommunicator ingredientServiceCommunicator;
     private final IngredientEntityMapper ingredientEntityMapper;
 
     @Override
@@ -49,19 +48,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional(readOnly = true)
     public RecipeIngredient getRecipeIngredientById(Long recipeId, Long ingredientId) {
-        recipeService.getRecipeById(recipeId);
-        ingredientService.getIngredientById(ingredientId);
-
-        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
-
-        RecipeIngredientEntity recipeIngredientEntity = recipeIngredientRepository.findById(recipeIngredientId)
-                .orElseThrow(() ->
-                        new RecipeIngredientNotFoundException(
-                                recipeIngredientId.getRecipeId(),
-                                recipeIngredientId.getIngredientId()
-                        )
-                );
-
+        RecipeIngredientEntity recipeIngredientEntity = getRecipeIngredientEntityById(recipeId, ingredientId);
         return recipeIngredientEntityMapper.toRecipeIngredient(recipeIngredientEntity);
     }
 
@@ -77,11 +64,11 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
         for (CreateRecipeIngredientDto createRecipeIngredientDto : createRecipeIngredientDtoList) {
 
-            Ingredient ingredient = ingredientService.getIngredientById(createRecipeIngredientDto.getIngredientId());
+            IngredientEntity ingredientEntity = ingredientServiceCommunicator.getIngredientEntityById(createRecipeIngredientDto.getIngredientId());
 
             RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
                     .recipe(recipeEntity)
-                    .ingredient(ingredientEntityMapper.toIngredientEntity(ingredient))
+                    .ingredient(ingredientEntity)
                     .unit(IngredientUnitMapper.fromString(createRecipeIngredientDto.getUnit()))
                     .quantity(createRecipeIngredientDto.getQuantity())
                     .build();
@@ -102,15 +89,19 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
             Long recipeId, Long ingredientId,
             UpdateRecipeIngredientDto updateRecipeIngredientDto
     ) {
-        RecipeIngredient recipeIngredient = getRecipeIngredientById(recipeId, ingredientId);
+        RecipeIngredientEntity recipeIngredientEntity = getRecipeIngredientEntityById(recipeId, ingredientId);
 
-        RecipeIngredientEntity recipeIngredientEntity = recipeIngredientEntityMapper
-                .toRecipeIngredientEntity(recipeIngredient);
+        Long newIngredientId = updateRecipeIngredientDto.getIngredientId();
+        if (!ingredientId.equals(newIngredientId)) {
+            IngredientEntity newIngredientEntity = ingredientServiceCommunicator
+                    .getIngredientEntityById(updateRecipeIngredientDto.getIngredientId());
 
-        if (!ingredientId.equals(updateRecipeIngredientDto.getIngredientId())) {
-            Ingredient ingredient = ingredientService
-                    .getIngredientById(updateRecipeIngredientDto.getIngredientId());
-            recipeIngredientEntity.setIngredient(ingredientEntityMapper.toIngredientEntity(ingredient));
+            recipeIngredientRepository.delete(recipeIngredientEntity);
+
+            recipeIngredientEntity = RecipeIngredientEntity.builder()
+                    .recipe(recipeIngredientEntity.getRecipe())
+                    .ingredient(newIngredientEntity)
+                    .build();
         }
 
         recipeIngredientEntity.setUnit(IngredientUnitMapper
@@ -127,5 +118,20 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     public void deleteRecipeIngredientById(Long recipeId, Long ingredientId) {
         recipeIngredientRepository.deleteById(
                 new RecipeIngredientId(recipeId, ingredientId));
+    }
+
+    private RecipeIngredientEntity getRecipeIngredientEntityById(Long recipeId, Long ingredientId) {
+        recipeService.getRecipeById(recipeId);
+        ingredientServiceCommunicator.getIngredientEntityById(ingredientId);
+
+        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
+
+        return recipeIngredientRepository.findById(recipeIngredientId)
+                .orElseThrow(() ->
+                        new RecipeIngredientNotFoundException(
+                                recipeIngredientId.getRecipeId(),
+                                recipeIngredientId.getIngredientId()
+                        )
+                );
     }
 }

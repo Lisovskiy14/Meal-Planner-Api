@@ -28,7 +28,6 @@ public class IngredientController {
     @GetMapping
     public ResponseEntity<IngredientListDto> getAllIngredients() {
         List<Ingredient> ingredients = ingredientService.getAllIngredients();
-
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new IngredientListDto(

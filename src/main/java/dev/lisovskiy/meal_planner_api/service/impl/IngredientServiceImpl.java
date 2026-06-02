@@ -9,6 +9,7 @@ import dev.lisovskiy.meal_planner_api.service.IngredientService;
 import dev.lisovskiy.meal_planner_api.service.exception.conflict.impl.IngredientAlreadyExistsException;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.IngredientNotFoundException;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
+import dev.lisovskiy.meal_planner_api.service.IngredientServiceCommunicator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class IngredientServiceImpl implements IngredientService {
+public class IngredientServiceImpl implements IngredientService, IngredientServiceCommunicator {
 
     private final IngredientRepository ingredientRepository;
     private final IngredientEntityMapper ingredientEntityMapper;
@@ -33,8 +34,7 @@ public class IngredientServiceImpl implements IngredientService {
     @Override
     @Transactional(readOnly = true)
     public Ingredient getIngredientById(Long id) {
-        IngredientEntity ingredientEntity = ingredientRepository.findById(id)
-                .orElseThrow(() -> new IngredientNotFoundException(id));
+        IngredientEntity ingredientEntity = getIngredientEntityById(id);
         return ingredientEntityMapper.toIngredient(ingredientEntity);
     }
 
@@ -80,5 +80,12 @@ public class IngredientServiceImpl implements IngredientService {
     @Transactional
     public void deleteIngredientById(Long id) {
         ingredientRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public IngredientEntity getIngredientEntityById(Long id) {
+        return ingredientRepository.findById(id)
+                .orElseThrow(() -> new IngredientNotFoundException(id));
     }
 }

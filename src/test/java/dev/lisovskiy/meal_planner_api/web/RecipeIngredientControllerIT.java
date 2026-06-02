@@ -6,10 +6,7 @@ import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientListDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.*;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
@@ -17,9 +14,11 @@ import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
+import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeIngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipeIngredientDtoSnippetProvider;
+import dev.lisovskiy.meal_planner_api.web.mapper.IngredientWebMapper;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeIngredientWebMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
@@ -71,6 +70,12 @@ public class RecipeIngredientControllerIT extends AbstractIT {
 
     @Autowired
     private RecipeIngredientWebMapper recipeIngredientWebMapper;
+
+    @Autowired
+    private IngredientEntityMapper ingredientEntityMapper;
+
+    @Autowired
+    private IngredientWebMapper ingredientWebMapper;
 
     @AfterEach
     public void cleanUp() {
@@ -639,6 +644,210 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                                 .description("Identifier of the target recipe.")
                                 )
                                 .requestSchema(Schema.schema("CreateRecipeIngredientListDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeIngredientById - Should Update and Return Updated RecipeIngredient")
+    public void updateRecipeIngredientById_shouldUpdateAndReturnUpdatedRecipeIngredient() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        List<IngredientEntity> ingredientEntities = List.of(
+                IngredientEntity.builder()
+                        .name("Ingredient 1")
+                        .description("Description of Ingredient 1")
+                        .build(),
+                IngredientEntity.builder()
+                        .name("Ingredient 2")
+                        .description("Description of Ingredient 2")
+                        .build()
+        );
+        ingredientEntities = ingredientRepository.saveAll(ingredientEntities);
+
+        Long recipeId = recipeEntity.getId();
+        Long ingredientId = ingredientEntities.getFirst().getId();
+
+        RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
+                .recipe(recipeEntity)
+                .ingredient(ingredientEntities.getFirst())
+                .unit(IngredientUnit.GRAMS)
+                .quantity(2.0)
+                .build();
+        recipeIngredientEntity = recipeIngredientRepository.save(recipeIngredientEntity);
+
+        Long updatedIngredientId = ingredientEntities.get(1).getId();
+        IngredientUnit updatedUnit = IngredientUnit.QUANTITY;
+        Double updatedQuantity = 13.0;
+
+        UpdateRecipeIngredientDto updateRecipeIngredientDto = new UpdateRecipeIngredientDto(
+                updatedIngredientId, updatedUnit.toString(), updatedQuantity
+        );
+
+        RecipeIngredientDto expectedResult = new RecipeIngredientDto(
+                ingredientWebMapper.toIngredientDto(ingredientEntityMapper.toIngredient(
+                        ingredientEntities.get(1)
+                )),
+                updatedUnit,
+                updatedQuantity
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeId, ingredientId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(updateRecipeIngredientDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        RecipeIngredientDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeIngredientDto.class, objectMapper
+        );
+
+        assertThat(actualResult)
+                .isNotNull()
+                .isEqualTo(expectedResult);
+
+        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, updatedIngredientId);
+        recipeIngredientEntity = recipeIngredientRepository.findById(recipeIngredientId).get();
+
+        assertThat(recipeIngredientEntity.getUnit())
+                .isEqualTo(updatedUnit);
+        assertThat(recipeIngredientEntity.getQuantity())
+                .isEqualTo(updatedQuantity);
+
+        // Document
+        resultActions.andDo(document("update-recipe-ingredient-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe ingredient")
+                                .description("Updates existing RecipeIngredient by provided recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeIngredientDto"))
+                                .responseSchema(Schema.schema("RecipeIngredientDto"))
+                                .requestFields(
+                                        RecipeIngredientDtoSnippetProvider.getUpdateRecipeIngredientDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeIngredientById - Should Return 400 Bad Request")
+    public void updateRecipeIngredientById_shouldReturn400BadRequest() {
+        // Arrange
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        UpdateRecipeIngredientDto updateRecipeIngredientDto = new UpdateRecipeIngredientDto(
+                1L, "Not Valid Unit", 0.0
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        1L, 1L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipeIngredientDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("update-recipe-ingredient-by-id-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe ingredient")
+                                .description("Updates existing RecipeIngredient by provided recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeIngredientDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeIngredientById - Should Return 404 Not Found")
+    public void updateRecipeIngredientById_shouldReturn404NotFound() {
+        // Arrange
+        UpdateRecipeIngredientDto updateRecipeIngredientDto = new UpdateRecipeIngredientDto(
+                1L, IngredientUnit.GRAMS.toString(), 12.0
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        1L, 1L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipeIngredientDto)));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        // Document
+        resultActions.andDo(document("update-recipe-ingredient-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe ingredient")
+                                .description("Updates existing RecipeIngredient by provided recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeIngredientDto"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
