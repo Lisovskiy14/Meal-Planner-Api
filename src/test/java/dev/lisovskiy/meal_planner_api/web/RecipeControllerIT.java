@@ -14,6 +14,7 @@ import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
+import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipeDtoSnippetProvider;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeWebMapper;
@@ -158,6 +159,126 @@ public class RecipeControllerIT extends AbstractIT {
                                 .responseFields(
                                         RecipeDtoSnippetProvider.getRecipeListDtoFields()
                                 )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeById - Should Return Recipe")
+    public void getRecipeById_shouldReturnRecipe() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instruction of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        List<IngredientEntity> ingredientEntities = List.of(
+                IngredientEntity.builder()
+                        .name("Ingredient 1")
+                        .description("Description of Ingredient 1")
+                        .build(),
+                IngredientEntity.builder()
+                        .name("Ingredient 2")
+                        .description("Description of Ingredient 2")
+                        .build()
+        );
+        ingredientEntities = ingredientRepository.saveAll(ingredientEntities);
+
+        List<RecipeIngredientEntity> recipeIngredientEntities = List.of(
+                RecipeIngredientEntity.builder()
+                        .recipe(recipeEntity)
+                        .ingredient(ingredientEntities.getFirst())
+                        .unit(IngredientUnit.GRAMS)
+                        .quantity(50.0)
+                        .build(),
+                RecipeIngredientEntity.builder()
+                        .recipe(recipeEntity)
+                        .ingredient(ingredientEntities.get(1))
+                        .unit(IngredientUnit.MILLILITERS)
+                        .quantity(120.0)
+                        .build()
+        );
+        recipeIngredientRepository.saveAll(recipeIngredientEntities);
+
+        recipeEntity.setRecipeIngredients(recipeIngredientEntities);
+
+        RecipeDto expectedResult = recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(
+                recipeEntity
+        ));
+
+        Long recipeId = recipeEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{id}", recipeId)
+                        .accept(APPLICATION_JSON_VALUE));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        RecipeDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeDto.class, objectMapper
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        // Document
+        resultActions.andDo(document("get-recipe-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get Recipe By Id")
+                                .description("Gets recipe by ID if exists.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("The recipe ID")
+                                )
+                                .responseSchema(Schema.schema("RecipeDto"))
+                                .responseFields(
+                                        RecipeDtoSnippetProvider.getRecipeDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipeById - Should Return 404 Not Found")
+    public void getRecipeById_shouldReturn404NotFound() {
+        // Arrange
+        Long recipeId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipes/{id}", recipeId)
+                        .accept(APPLICATION_PROBLEM_JSON));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(recipeRepository.existsById(recipeId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-recipe-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get Recipe By Id")
+                                .description("Gets recipe by ID if exists.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("The recipe ID")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
