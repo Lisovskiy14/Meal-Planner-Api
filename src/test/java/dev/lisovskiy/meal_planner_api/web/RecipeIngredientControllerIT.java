@@ -853,4 +853,66 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("DeleteRecipeIngredientById - Should Delete RecipeIngredient")
+    public void deleteRecipeIngredientById_shouldDeleteRecipeIngredient() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(1)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        IngredientEntity ingredientEntity = IngredientEntity.builder()
+                .name("Ingredient 1")
+                .description("Description of Ingredient 1")
+                .build();
+        ingredientEntity = ingredientRepository.save(ingredientEntity);
+
+        Long recipeId = recipeEntity.getId();
+        Long ingredientId = ingredientEntity.getId();
+
+        RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
+                .recipe(recipeEntity)
+                .ingredient(ingredientEntity)
+                .unit(IngredientUnit.GRAMS)
+                .quantity(2.0)
+                .build();
+        recipeIngredientRepository.save(recipeIngredientEntity);
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                delete("/api/v1/recipes/{recipeId}/ingredients/{ingredientId}",
+                        recipeId, ingredientId)
+                        .accept(APPLICATION_JSON_VALUE));
+
+        // Assert
+        resultActions.andExpect(status().isNoContent());
+
+        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
+        assertThat(recipeIngredientRepository.existsById(recipeIngredientId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("delete-recipe-ingredient-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Delete recipe ingredient")
+                                .description("Deletes RecipeIngredient by provided recipe and ingredient ids.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe."),
+                                        parameterWithName("ingredientId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target ingredient.")
+                                )
+                                .build()
+                )
+        ));
+    }
 }

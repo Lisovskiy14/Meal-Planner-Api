@@ -8,6 +8,7 @@ import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
+import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.IngredientDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
@@ -97,7 +98,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isOk());
 
-        IngredientListDto actualResult = getObjectFromMvcResult(mvcResult, IngredientListDto.class);
+        IngredientListDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, IngredientListDto.class, objectMapper
+        );
 
         assertThat(actualResult)
                 .isNotNull()
@@ -165,7 +168,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isOk());
 
-        IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
+        IngredientDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, IngredientDto.class, objectMapper
+        );
 
         assertThat(actualResult)
                 .isNotNull()
@@ -251,7 +256,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isCreated());
 
-        IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
+        IngredientDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, IngredientDto.class, objectMapper
+        );
 
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
@@ -316,7 +323,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isBadRequest());
 
-        ProblemDetail actualResult = getObjectFromMvcResult(mvcResult, ProblemDetail.class);
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
 
         assertThat(actualResult.getTitle())
                 .isEqualTo(expectedResultTitle);
@@ -429,7 +438,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isOk());
 
-        IngredientDto actualResult = getObjectFromMvcResult(mvcResult, IngredientDto.class);
+        IngredientDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, IngredientDto.class, objectMapper
+        );
 
         assertThat(actualResult)
                 .isNotNull()
@@ -495,7 +506,9 @@ public class IngredientControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isBadRequest());
 
-        ProblemDetail actualResult = getObjectFromMvcResult(mvcResult, ProblemDetail.class);
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
 
         assertThat(actualResult.getTitle())
                 .isEqualTo(expectedResultTitle);
@@ -665,10 +678,5 @@ public class IngredientControllerIT extends AbstractIT {
                                 .build()
                 )
         ));
-    }
-
-    private <T> T getObjectFromMvcResult(MvcResult mvcResult, Class<T> clazz) throws Exception {
-        String jsonResponse = mvcResult.getResponse().getContentAsString();
-        return objectMapper.readValue(jsonResponse, clazz);
     }
 }
