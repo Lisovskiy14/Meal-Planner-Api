@@ -26,7 +26,7 @@ public class RecipeIngredientDtoSnippetProvider {
         );
 
         Stream<FieldDescriptor> nestedIngredientFields = IngredientDtoSnippetsProvider
-                .getIngredientDtoFieldsWithPrefix(prefix + "ingredient").stream();
+                .getIngredientDtoFieldsWithPrefix(p + "ingredient").stream();
 
         return Stream.concat(rootFields, nestedIngredientFields)
                 .toList();

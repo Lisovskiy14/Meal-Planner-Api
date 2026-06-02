@@ -32,6 +32,7 @@ public class RecipeEntity {
     @Column(name = "prep_time_minutes",  nullable = false)
     private int prepTimeMinutes;
 
+    @Builder.Default
     @OneToMany(
             mappedBy = "recipe",
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
