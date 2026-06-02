@@ -5,14 +5,17 @@ import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
+import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeListDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
@@ -23,10 +26,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ProblemDetail;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
@@ -278,6 +283,313 @@ public class RecipeControllerIT extends AbstractIT {
                                         parameterWithName("id")
                                                 .description("The recipe ID")
                                 )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipe - Should Create and Return Empty Recipe")
+    public void createRecipe_shouldCreateAndReturnEmptyRecipe() {
+        // Arrange
+        String title = "Recipe 1";
+        String instructions = "Instructions of Recipe 1";
+        int prepTimeMinutes = 1;
+
+        CreateRecipeDto createRecipeDto = new CreateRecipeDto(
+                title, instructions, prepTimeMinutes, null
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createRecipeDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isCreated());
+
+        RecipeDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeDto.class, objectMapper
+        );
+
+        RecipeDto expectedResult = new RecipeDto(
+                actualResult.getId(), title, instructions, prepTimeMinutes, new ArrayList<>()
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        assertThat(recipeRepository.existsById(actualResult.getId()))
+                .isTrue();
+
+        // Document
+        resultActions.andDo(document("create-recipe-empty",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create Recipe")
+                                .description("Creates Recipe and returns it.")
+                                .requestSchema(Schema.schema("CreateRecipeDto"))
+                                .responseSchema(Schema.schema("RecipeDto"))
+                                .responseFields(
+                                        RecipeDtoSnippetProvider.getEmptyRecipeDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipe - Should Create and Return Full Recipe")
+    public void createRecipe_shouldCreateAndReturnFullRecipe() {
+        // Arrange
+        List<IngredientEntity> ingredientEntities = List.of(
+                IngredientEntity.builder()
+                        .name("Ingredient 1")
+                        .description("Description of Ingredient 1")
+                        .build(),
+                IngredientEntity.builder()
+                        .name("Ingredient 2")
+                        .description("Description of Ingredient 2")
+                        .build()
+        );
+        ingredientEntities = ingredientRepository.saveAll(ingredientEntities);
+
+        List<CreateRecipeIngredientDto> createRecipeIngredientDtoList = List.of(
+                new CreateRecipeIngredientDto(
+                        ingredientEntities.getFirst().getId(),
+                        IngredientUnit.GRAMS.toString(),
+                        45.0
+                ),
+                new CreateRecipeIngredientDto(
+                        ingredientEntities.get(1).getId(),
+                        IngredientUnit.QUANTITY.toString(),
+                        4.0
+                )
+        );
+
+        String title = "Recipe 1";
+        String instructions = "Instructions of Recipe 1";
+        int prepTimeMinutes = 1;
+
+        CreateRecipeDto createRecipeDto = new CreateRecipeDto(
+                title,
+                instructions,
+                prepTimeMinutes,
+                createRecipeIngredientDtoList
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createRecipeDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isCreated());
+
+        RecipeDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeDto.class, objectMapper
+        );
+
+        assertThat(actualResult.getId())
+                .isNotNull();
+        assertThat(actualResult.getTitle())
+                .isEqualTo(title);
+        assertThat(actualResult.getInstructions())
+                .isEqualTo(instructions);
+        assertThat(actualResult.getPrepTimeMinutes())
+                .isEqualTo(prepTimeMinutes);
+        assertThat(actualResult.getRecipeIngredients())
+                .isNotEmpty()
+                .hasSize(createRecipeIngredientDtoList.size());
+
+        assertThat(recipeRepository.existsById(actualResult.getId()))
+                .isTrue();
+
+        List<RecipeIngredientId> createdRecipeIngredientIds = actualResult.getRecipeIngredients().stream()
+                .map(recipeIngredientDto -> new RecipeIngredientId(
+                        actualResult.getId(),
+                        recipeIngredientDto.getIngredient().getId()
+                ))
+                .toList();
+
+        for (RecipeIngredientId createdRecipeIngredientId : createdRecipeIngredientIds) {
+            assertThat(recipeIngredientRepository.existsById(createdRecipeIngredientId))
+                    .isTrue();
+        }
+
+        // Document
+        resultActions.andDo(document("create-recipe-full",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create Recipe")
+                                .description("Creates Recipe and returns it.")
+                                .requestSchema(Schema.schema("CreateRecipeDto"))
+                                .responseSchema(Schema.schema("RecipeDto"))
+                                .responseFields(
+                                        RecipeDtoSnippetProvider.getRecipeDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipe - Should Return 400 Bad Request")
+    public void createRecipe_shouldReturn400BadRequest() {
+        // Arrange
+        String title = "R";
+        String instructions = "instr";
+        int prepTimeMinutes = 0;
+
+        CreateRecipeDto createRecipeDto = new CreateRecipeDto(
+                title, instructions, prepTimeMinutes, null
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipeDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("create-recipe-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create Recipe")
+                                .description("Creates Recipe and returns it.")
+                                .requestSchema(Schema.schema("CreateRecipeDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipe - Should Return 404 Not Found")
+    public void createRecipe_shouldReturn404NotFound() {
+        // Arrange
+        List<CreateRecipeIngredientDto> createRecipeIngredientDtoList = List.of(
+                new CreateRecipeIngredientDto(
+                        1L,
+                        IngredientUnit.GRAMS.toString(),
+                        45.0
+                )
+        );
+
+        String title = "Recipe 1";
+        String instructions = "Instructions of Recipe 1";
+        int prepTimeMinutes = 1;
+
+        CreateRecipeDto createRecipeDto = new CreateRecipeDto(
+                title,
+                instructions,
+                prepTimeMinutes,
+                createRecipeIngredientDtoList
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipeDto)));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        // Document
+        resultActions.andDo(document("create-recipe-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create Recipe")
+                                .description("Creates Recipe and returns it.")
+                                .requestSchema(Schema.schema("CreateRecipeDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipe - Should Return 409 Conflict")
+    public void createRecipe_shouldReturn409Conflict() {
+        // Arrange
+        String sameTitle = "Recipe 1";
+
+        RecipeEntity existingRecipeEntity = RecipeEntity.builder()
+                .title(sameTitle)
+                .instructions("Some instructions")
+                .prepTimeMinutes(3)
+                .build();
+        recipeRepository.save(existingRecipeEntity);
+
+        String instructions = "Instructions of Recipe 1";
+        int prepTimeMinutes = 1;
+
+        CreateRecipeDto createRecipeDto = new CreateRecipeDto(
+                sameTitle,
+                instructions,
+                prepTimeMinutes,
+                null
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipeDto)));
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        assertThat(recipeRepository.count())
+                .isEqualTo(1);
+
+        // Document
+        resultActions.andDo(document("create-recipe-conflict",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create Recipe")
+                                .description("Creates Recipe and returns it.")
+                                .requestSchema(Schema.schema("CreateRecipeDto"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )

@@ -42,7 +42,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     @Transactional
     public Recipe createRecipe(CreateRecipeDto createRecipeDto) {
-        boolean titleAlreadyExists = recipeRepository.findByTitle(createRecipeDto.getTitle());
+        boolean titleAlreadyExists = recipeRepository.existsByTitle(createRecipeDto.getTitle());
         if (titleAlreadyExists) {
             throw new RecipeAlreadyExistsException(createRecipeDto.getTitle());
         }

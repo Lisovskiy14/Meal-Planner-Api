@@ -1,6 +1,7 @@
 package dev.lisovskiy.meal_planner_api.util;
 
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.JsonFieldType;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,10 +27,26 @@ public class RecipeDtoSnippetProvider {
         return getRecipeDtoFieldsWithPrefix("");
     }
 
+    public static List<FieldDescriptor> getEmptyRecipeDtoFields() {
+        return getEmptyRecipeDtoFieldsWithPrefix("");
+    }
+
     public static List<FieldDescriptor> getRecipeDtoFieldsWithPrefix(String prefix) {
         String p = PrefixValidator.validate(prefix);
 
-        Stream<FieldDescriptor> rootFields = Stream.of(
+        Stream<FieldDescriptor> rootFields = getEmptyRecipeDtoFieldsWithPrefix(p).stream();
+
+        Stream<FieldDescriptor> nestedFields = RecipeIngredientDtoSnippetProvider
+                .getRecipeIngredientDtoFieldsWithPrefix(p + "recipeIngredients[]").stream();
+
+        return Stream.concat(rootFields, nestedFields)
+                .toList();
+    }
+
+    public static List<FieldDescriptor> getEmptyRecipeDtoFieldsWithPrefix(String prefix) {
+        String p = PrefixValidator.validate(prefix);
+
+        return List.of(
                 fieldWithPath(p + "id")
                         .description("The recipe ID"),
                 fieldWithPath(p + "title")
@@ -39,13 +56,8 @@ public class RecipeDtoSnippetProvider {
                 fieldWithPath(p + "prepTimeMinutes")
                         .description("Preparation time in minutes"),
                 fieldWithPath(p + "recipeIngredients")
+                        .type(JsonFieldType.ARRAY)
                         .description("The list of ingredients for the recipe")
         );
-
-        Stream<FieldDescriptor> nestedFields = RecipeIngredientDtoSnippetProvider
-                .getRecipeIngredientDtoFieldsWithPrefix(p + "recipeIngredients[]").stream();
-
-        return Stream.concat(rootFields, nestedFields)
-                .toList();
     }
 }
