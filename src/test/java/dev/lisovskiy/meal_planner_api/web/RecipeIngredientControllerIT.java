@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientListDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
@@ -491,16 +492,16 @@ public class RecipeIngredientControllerIT extends AbstractIT {
         IngredientUnit unit = IngredientUnit.GRAMS;
         Double quantity = 43.0;
 
-        List<CreateRecipeIngredientDto> createRecipeIngredientDtoList = List.of(
-                new CreateRecipeIngredientDto(ingredientId, unit.toString(), quantity)
-        );
+        CreateRecipeIngredientListDto createRecipeIngredientListDto = new CreateRecipeIngredientListDto(List.of(
+                        new CreateRecipeIngredientDto(ingredientId, unit.toString(), quantity)
+        ));
 
         // Act
         ResultActions resultActions = mockMvc.perform(
                 post("/api/v1/recipes/{recipeId}/ingredients", recipeId)
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE)
-                        .content(objectMapper.writeValueAsString(createRecipeIngredientDtoList)));
+                        .content(objectMapper.writeValueAsString(createRecipeIngredientListDto)));
 
         MvcResult mvcResult = resultActions.andReturn();
 
@@ -543,7 +544,102 @@ public class RecipeIngredientControllerIT extends AbstractIT {
                                                 .type(SimpleType.NUMBER)
                                                 .description("Identifier of the target recipe.")
                                 )
+                                .requestSchema(Schema.schema("CreateRecipeIngredientListDto"))
                                 .responseSchema(Schema.schema("RecipeIngredientListDto"))
+                                .requestFields(
+                                        RecipeIngredientDtoSnippetProvider.getCreateRecipeIngredientListDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipeIngredients - Should Return 400 Bad Request")
+    public void createRecipeIngredients_shouldReturn400BadRequest() {
+        // Arrange
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        CreateRecipeIngredientListDto createRecipeIngredientListDto = new CreateRecipeIngredientListDto(List.of(
+                        new CreateRecipeIngredientDto(-1L, "Not Valid Unit", 0.0)
+        ));
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes/{recipeId}/ingredients", 0L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipeIngredientListDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("create-recipe-ingredient-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe ingredient")
+                                .description("Creates a relation between targeting Recipe and Ingredients.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe.")
+                                )
+                                .requestSchema(Schema.schema("CreateRecipeIngredientListDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipeIngredients - Should Return 404 Not Found")
+    public void createRecipeIngredients_shouldReturn404NotFound() {
+        // Arrange
+        CreateRecipeIngredientListDto createRecipeIngredientListDto = new CreateRecipeIngredientListDto(List.of(
+                new CreateRecipeIngredientDto(1L, IngredientUnit.GRAMS.toString(), 32.0)
+        ));
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/recipes/{recipeId}/ingredients", 1L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipeIngredientListDto)));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        // Document
+        resultActions.andDo(document("create-recipe-ingredient-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe ingredient")
+                                .description("Creates a relation between targeting Recipe and Ingredients.")
+                                .pathParameters(
+                                        parameterWithName("recipeId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe.")
+                                )
+                                .requestSchema(Schema.schema("CreateRecipeIngredientListDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));

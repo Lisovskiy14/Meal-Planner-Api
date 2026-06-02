@@ -1,10 +1,7 @@
 package dev.lisovskiy.meal_planner_api.web;
 
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.RecipeIngredientListDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.UpdateRecipeIngredientDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.*;
 import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
 import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeIngredientWebMapper;
@@ -56,10 +53,10 @@ public class RecipeIngredientController {
     @PostMapping("/{recipeId}/ingredients")
     public ResponseEntity<RecipeIngredientListDto> createRecipeIngredients(
             @PathVariable @ValidLongId Long recipeId,
-            @RequestBody @Validated List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
+            @RequestBody @Validated CreateRecipeIngredientListDto createRecipeIngredientListDto
     ) {
         List<RecipeIngredient> recipeIngredients = recipeIngredientService
-                .createRecipeIngredients(recipeId, createRecipeIngredientDtoList);
+                .createRecipeIngredients(recipeId, createRecipeIngredientListDto.getCreateDtoList());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)

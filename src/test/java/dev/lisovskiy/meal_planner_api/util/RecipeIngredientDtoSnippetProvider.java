@@ -15,7 +15,7 @@ public class RecipeIngredientDtoSnippetProvider {
     }
 
     public static List<FieldDescriptor> getRecipeIngredientDtoFieldsWithPrefix(String prefix) {
-        String p = prefix.isBlank() ? "" : prefix + '.';
+        String p = validateAndReturnPrefix(prefix);
 
         Stream<FieldDescriptor> rootFields = Stream.of(
                 fieldWithPath(p + "ingredient")
@@ -30,5 +30,40 @@ public class RecipeIngredientDtoSnippetProvider {
 
         return Stream.concat(rootFields, nestedIngredientFields)
                 .toList();
+    }
+
+    public static List<FieldDescriptor> getCreateRecipeIngredientListDtoFields() {
+        Stream<FieldDescriptor> rootFields = Stream.of(
+                fieldWithPath("createDtoList")
+                        .type(JsonFieldType.ARRAY)
+                        .description("List of actual create DTOs")
+        );
+
+        Stream<FieldDescriptor> nestedCreateDtoFields = getCreateRecipeIngredientDtoFieldsWithPrefix("createDtoList[]")
+                .stream();
+
+        return Stream.concat(rootFields, nestedCreateDtoFields)
+                .toList();
+    }
+
+    public static List<FieldDescriptor> getUpdateRecipeIngredientDtoFields() {
+        return getCreateRecipeIngredientDtoFieldsWithPrefix("");
+    };
+
+    private static List<FieldDescriptor> getCreateRecipeIngredientDtoFieldsWithPrefix(String prefix) {
+        String p = validateAndReturnPrefix(prefix);
+
+        return List.of(
+                fieldWithPath(p + "ingredientId")
+                        .description("Id of target ingredient"),
+                fieldWithPath(p + "unit")
+                        .description("Unit of measurement of ingredient"),
+                fieldWithPath(p + "quantity")
+                    .description("Quantity of ingredient by its unit")
+        );
+    }
+
+    private static String validateAndReturnPrefix(String prefix) {
+        return prefix.isBlank() ? "" : prefix + '.';
     }
 }
