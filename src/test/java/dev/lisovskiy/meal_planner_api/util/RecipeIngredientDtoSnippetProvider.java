@@ -50,7 +50,7 @@ public class RecipeIngredientDtoSnippetProvider {
         return getCreateRecipeIngredientDtoFieldsWithPrefix("");
     };
 
-    private static List<FieldDescriptor> getCreateRecipeIngredientDtoFieldsWithPrefix(String prefix) {
+    public static List<FieldDescriptor> getCreateRecipeIngredientDtoFieldsWithPrefix(String prefix) {
         String p = validateAndReturnPrefix(prefix);
 
         return List.of(

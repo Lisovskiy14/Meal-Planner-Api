@@ -64,7 +64,7 @@ public class RecipeServiceImpl implements RecipeService {
         RecipeEntity recipeEntity = recipeEntityMapper.toRecipeEntity(getRecipeById(id));
 
         String title = updateRecipeDto.getTitle();
-        boolean titleAlreadyExists = recipeRepository.findByTitle(title);
+        boolean titleAlreadyExists = recipeRepository.existsByTitle(title);
         if (titleAlreadyExists && !recipeEntity.getTitle().equals(title)) {
             throw new RecipeAlreadyExistsException(title);
         }

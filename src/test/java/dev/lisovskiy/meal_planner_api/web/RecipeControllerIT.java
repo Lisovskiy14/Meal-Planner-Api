@@ -8,6 +8,7 @@ import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
 import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeListDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe.UpdateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
@@ -337,6 +338,9 @@ public class RecipeControllerIT extends AbstractIT {
                                 .description("Creates Recipe and returns it.")
                                 .requestSchema(Schema.schema("CreateRecipeDto"))
                                 .responseSchema(Schema.schema("RecipeDto"))
+                                .requestFields(
+                                        RecipeDtoSnippetProvider.getEmptyCreateRecipeDtoFields()
+                                )
                                 .responseFields(
                                         RecipeDtoSnippetProvider.getEmptyRecipeDtoFields()
                                 )
@@ -438,6 +442,9 @@ public class RecipeControllerIT extends AbstractIT {
                                 .description("Creates Recipe and returns it.")
                                 .requestSchema(Schema.schema("CreateRecipeDto"))
                                 .responseSchema(Schema.schema("RecipeDto"))
+                                .requestFields(
+                                        RecipeDtoSnippetProvider.getCreateRecipeDtoFields()
+                                )
                                 .responseFields(
                                         RecipeDtoSnippetProvider.getRecipeDtoFields()
                                 )
@@ -590,6 +597,259 @@ public class RecipeControllerIT extends AbstractIT {
                                 .summary("Create Recipe")
                                 .description("Creates Recipe and returns it.")
                                 .requestSchema(Schema.schema("CreateRecipeDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeById - Should Update and Return Recipe")
+    public void updateRecipeById_shouldUpdateAndReturnRecipe() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(3)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long recipeId = recipeEntity.getId();
+        String updatedTitle = "Updated Recipe 1";
+        String updatedInstructions = "Updated Instructions of Recipe 1";
+        int updatedPrepTimeMinutes = 5;
+
+        UpdateRecipeDto updateRecipeDto = new UpdateRecipeDto(
+                updatedTitle,
+                updatedInstructions,
+                updatedPrepTimeMinutes
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{id}", recipeId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(updateRecipeDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        RecipeDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipeDto.class, objectMapper
+        );
+
+        RecipeDto expectedResult = new RecipeDto(
+                actualResult.getId(),
+                updatedTitle,
+                updatedInstructions,
+                updatedPrepTimeMinutes,
+                new ArrayList<>()
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        RecipeEntity recipeInDb = recipeRepository.findById(recipeId).get();
+
+        assertThat(recipeInDb.getTitle())
+                .isEqualTo(updatedTitle);
+        assertThat(recipeInDb.getInstructions())
+            .isEqualTo(updatedInstructions);
+        assertThat(recipeInDb.getPrepTimeMinutes())
+                .isEqualTo(updatedPrepTimeMinutes);
+
+        // Document
+        resultActions.andDo(document("update-recipe-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update Recipe By Id")
+                                .description("Updates Recipe if it exists and returns it.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("Recipe Id")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeDto"))
+                                .responseSchema(Schema.schema("RecipeDto"))
+                                .requestFields(
+                                    RecipeDtoSnippetProvider.getUpdateRecipeDtoFields()
+                                )
+                                .responseFields(
+                                        RecipeDtoSnippetProvider.getEmptyRecipeDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeById - Should Return 400 Bad Request")
+    public void updateRecipeById_shouldReturn400BadRequest() {
+        // Arrange
+        Long recipeId = 1L;
+        String updatedTitle = "r";
+        String updatedInstructions = "instr";
+        int updatedPrepTimeMinutes = 0;
+
+        UpdateRecipeDto updateRecipeDto = new UpdateRecipeDto(
+                updatedTitle,
+                updatedInstructions,
+                updatedPrepTimeMinutes
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{id}", recipeId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipeDto)));
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("update-recipe-by-id-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update Recipe By Id")
+                                .description("Updates Recipe if it exists and returns it.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("Recipe Id")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeById - Should Return 404 Not Found")
+    public void updateRecipeById_shouldReturn404NotFound() {
+        // Arrange
+        Long recipeId = 1L;
+        String updatedTitle = "Updated Recipe 1";
+        String updatedInstructions = "Updated Instructions of Recipe 1";
+        int updatedPrepTimeMinutes = 5;
+
+        UpdateRecipeDto updateRecipeDto = new UpdateRecipeDto(
+                updatedTitle,
+                updatedInstructions,
+                updatedPrepTimeMinutes
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{id}", recipeId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipeDto)));
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        // Document
+        resultActions.andDo(document("update-recipe-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update Recipe By Id")
+                                .description("Updates Recipe if it exists and returns it.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("Recipe Id")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipeById - Should Return 409 Conflict")
+    public void updateRecipeById_shouldReturn409Conflict() {
+        // Arrange
+        String sameTitle = "Recipe 1";
+
+        RecipeEntity anotherRecipeEntity = RecipeEntity.builder()
+                .title(sameTitle)
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(3)
+                .build();
+        recipeRepository.save(anotherRecipeEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 2")
+                .instructions("Instructions of Recipe 2")
+                .prepTimeMinutes(3)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long recipeId = recipeEntity.getId();
+        String updatedInstructions = "Updated Instructions of Recipe 2";
+        int updatedPrepTimeMinutes = 5;
+
+        UpdateRecipeDto updateRecipeDto = new UpdateRecipeDto(
+                sameTitle,
+                updatedInstructions,
+                updatedPrepTimeMinutes
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipes/{id}", recipeId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipeDto)));
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        recipeEntity = recipeRepository.findById(recipeId).get();
+
+        assertThat(recipeEntity.getTitle())
+                .isNotEqualTo(sameTitle);
+        assertThat(recipeEntity.getInstructions())
+                .isNotEqualTo(updatedInstructions);
+        assertThat(recipeEntity.getPrepTimeMinutes())
+                .isNotEqualTo(updatedPrepTimeMinutes);
+
+        // Document
+        resultActions.andDo(document("update-recipe-by-id-conflict",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update Recipe By Id")
+                                .description("Updates Recipe if it exists and returns it.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("Recipe Id")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipeDto"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )

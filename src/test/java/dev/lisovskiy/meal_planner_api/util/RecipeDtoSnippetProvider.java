@@ -60,4 +60,40 @@ public class RecipeDtoSnippetProvider {
                         .description("The list of ingredients for the recipe")
         );
     }
+
+    public static List<FieldDescriptor> getEmptyCreateRecipeDtoFields() {
+        return List.of(
+                fieldWithPath("title")
+                        .description("The title of new recipe"),
+                fieldWithPath("instructions")
+                        .description("Prepare instructions of new recipe"),
+                fieldWithPath("prepTimeMinutes")
+                        .description("Preparation time in minutes"),
+                fieldWithPath("recipeIngredients")
+                        .description("The list of ingredients for the recipe")
+        );
+    }
+
+    public static List<FieldDescriptor> getCreateRecipeDtoFields() {
+        Stream<FieldDescriptor> rootFields = getEmptyCreateRecipeDtoFields().stream();
+
+        Stream<FieldDescriptor> nestedFields = RecipeIngredientDtoSnippetProvider
+                .getCreateRecipeIngredientDtoFieldsWithPrefix("recipeIngredients[]").stream();
+
+        return Stream.concat(rootFields, nestedFields)
+                .toList();
+    }
+
+    public static List<FieldDescriptor> getUpdateRecipeDtoFields() {
+        return List.of(
+                fieldWithPath("title")
+                        .description("New title of recipe"),
+                fieldWithPath("instructions")
+                        .description("New prepare instructions of recipe"),
+                fieldWithPath("prepTimeMinutes")
+                        .description("New preparation time in minutes")
+        );
+    }
+
+
 }
