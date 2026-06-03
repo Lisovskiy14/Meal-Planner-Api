@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: meal-planner-1
+      author: lisovskiy14
+      changes:
+
+        - createSequence:
+            sequenceName: ingredient_seq
+            startValue: 1
+            incrementBy: 50
+            dataType: BIGINT
+
+        - createTable:
+            tableName: ingredients
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  defaultValueComputed: "nextval('ingredient_seq')"
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+
+        - addUniqueConstraint:
+            tableName: ingredients
+            columnNames: name
+            constraintName: uq_ingredients_name
