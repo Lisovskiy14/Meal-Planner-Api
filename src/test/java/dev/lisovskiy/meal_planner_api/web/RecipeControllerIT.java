@@ -855,4 +855,45 @@ public class RecipeControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("DeleteRecipeById - Should Delete Recipe")
+    public void deleteRecipeById_shouldDeleteRecipe() {
+        // Arrange
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(4)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long recipeId = recipeEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                delete("/api/v1/recipes/{id}", recipeId)
+                        .accept(APPLICATION_JSON_VALUE));
+
+        // Assert
+        resultActions.andExpect(status().isNoContent());
+
+        assertThat(recipeRepository.existsById(recipeId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("delete-recipe-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Delete Recipe By Id")
+                                .description("Deletes Recipe if it exists.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .description("Recipe Id")
+                                )
+                                .build()
+                )
+        ));
+    }
 }
