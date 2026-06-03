@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: liquibase/db.changelog-ingredient.yaml
+  - include:
+      file: liquibase/db.changelog-recipe.yaml
+  - include:
+      file: liquibase/db.changelog-recipe-ingredient.yaml

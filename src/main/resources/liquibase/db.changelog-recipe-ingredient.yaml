@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: meal-planner-3
+      author: lisovskiy14
+      changes:
+
+        - createTable:
+            tableName: recipe_ingredients
+            columns:
+              - column:
+                  name: recipe_id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_recipe_ingredients
+              - column:
+                  name: ingredient_id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: unit
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: DOUBLE PRECISION
+
+        - addForeignKeyConstraint:
+            baseTableName: recipe_ingredients
+            baseColumnNames: recipe_id
+            referencedTableName: recipes
+            referencedColumnNames: id
+            constraintName: fk_recipe_ingredients_recipe
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: recipe_ingredients
+            baseColumnNames: ingredient_id
+            referencedTableName: ingredients
+            referencedColumnNames: id
+            constraintName: fk_recipe_ingredients_ingredient

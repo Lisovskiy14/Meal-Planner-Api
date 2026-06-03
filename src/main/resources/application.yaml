@@ -1,3 +1,44 @@
 spring:
   application:
     name: meal-planner-api
+
+  jpa:
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+          batch_size: 15
+        order_inserts: true
+        order_updates: true
+        query:
+          fail_on_pagination_over_collection_fetch: true
+          in_clause_parameter_padding: true
+        connection:
+          provider_disables_autocommit: true
+    hibernate:
+      ddl-auto: none
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST}:5432/${POSTGRES_DB}?options=-c%20timezone=${TZ}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      auto-commit: false
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      max-lifetime: 180000
+      pool-name: meal-planner
+
+  liquibase:
+    change-log: classpath:liquibase/changelog.yaml
+    enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    url: /openapi3.yaml
+    path: /swagger-ui.html
+  packages-to-scan: none
