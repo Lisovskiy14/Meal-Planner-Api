@@ -1,4 +1,4 @@
-package dev.lisovskiy.meal_planner_api.service;
+package dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient;
 
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
