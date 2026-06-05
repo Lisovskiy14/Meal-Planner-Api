@@ -3,8 +3,8 @@ package dev.lisovskiy.meal_planner_api.repository.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -24,6 +24,9 @@ public class MealPlanEntity {
     )
     private Long id;
 
+    @Column(name = "description")
+    private String description;
+
     @Builder.Default
     @OneToMany(
             mappedBy = "mealPlan",
@@ -33,6 +36,7 @@ public class MealPlanEntity {
     )
     private List<RecipePlanEntity> recipePlans = new ArrayList<>();
 
-    @Column(name = "date", nullable = false)
-    private Date date;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dayOfWeek", nullable = false)
+    private DayOfWeek dayOfWeek;
 }

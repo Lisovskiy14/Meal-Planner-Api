@@ -6,7 +6,12 @@ import lombok.*;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "recipe_plans")
+@Table(name = "recipe_plans", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uq_recipe_plan_meal_time",
+                columnNames = {"meal_plan_id", "time"}
+        )
+})
 @Getter
 @Setter
 @Builder
@@ -21,6 +26,10 @@ public class RecipePlanEntity {
             sequenceName = "recipe_plan_seq"
     )
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "meal_plan_id", nullable = false)
+    private MealPlanEntity mealPlan;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipe_id", nullable = false)
