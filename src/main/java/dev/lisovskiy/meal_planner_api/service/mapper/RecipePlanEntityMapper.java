@@ -4,7 +4,7 @@ import dev.lisovskiy.meal_planner_api.domain.RecipePlan;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {RecipeEntityMapper.class})
 public interface RecipePlanEntityMapper {
     RecipePlan toRecipePlan(RecipePlanEntity recipePlanEntity);
 }
