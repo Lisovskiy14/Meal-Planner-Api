@@ -1,0 +1,37 @@
+package dev.lisovskiy.meal_planner_api.util;
+
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.JsonFieldType;
+
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+
+public class RecipePlanDtoSnippetProvider {
+
+    public static List<FieldDescriptor> getRecipePlanDtoFields() {
+        return getRecipePlanDtoFieldsWithPrefix("");
+    }
+
+    public static List<FieldDescriptor> getRecipePlanDtoFieldsWithPrefix(String prefix) {
+        String p = PrefixValidator.validate(prefix);
+
+        Stream<FieldDescriptor> rootFields = Stream.of(
+                fieldWithPath("id")
+                        .description("The recipe plan ID."),
+                fieldWithPath("description")
+                        .description("The recipe plan description."),
+                fieldWithPath("time")
+                        .description("Time to eat of recipe plan."),
+                fieldWithPath("recipe")
+                        .type(JsonFieldType.OBJECT)
+                        .description("Target recipe of recipe plan.")
+        );
+
+        Stream<FieldDescriptor> nestedFields = RecipeDtoSnippetProvider
+                .getRecipeDtoFieldsWithPrefix(p + "recipe").stream();
+
+        return Stream.concat(rootFields, nestedFields).toList();
+    }
+}
