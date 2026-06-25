@@ -336,4 +336,137 @@ public class RecipePlanControllerIT extends AbstractIT {
         ));
     }
 
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipePlanById - Should Return 404 Not Found")
+    public void  updateRecipePlanById_shouldReturn404NotFound() {
+        // Arrange
+        UpdateRecipePlanDto updateRecipePlanDto = new UpdateRecipePlanDto(
+                1L,
+                1L,
+                "Updated Description of RecipePlan 1",
+                "18:30"
+        );
+
+        Long unexistingRecipePlanId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipe-plans/{id}", unexistingRecipePlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipePlanDto))
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(recipePlanRepository.existsById(unexistingRecipePlanId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("update-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe plan")
+                                .description("Finds and updates recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipePlan"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipePlanById - Should Return 409 Conflict")
+    public void  updateRecipePlanById_shouldReturn409Conflict() {
+        // Arrange
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .dayOfWeek(DayOfWeek.FRIDAY)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(15)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        LocalTime sameLocalTime = LocalTime.of(14, 0);
+
+        RecipePlanEntity anotherRecipePlanEntity = RecipePlanEntity.builder()
+                .mealPlan(mealPlanEntity)
+                .recipe(recipeEntity)
+                .description("Description of RecipePlan 1")
+                .time(sameLocalTime)
+                .build();
+        anotherRecipePlanEntity = recipePlanRepository.save(anotherRecipePlanEntity);
+
+        RecipePlanEntity recipePlanEntity = RecipePlanEntity.builder()
+                .mealPlan(mealPlanEntity)
+                .recipe(recipeEntity)
+                .description("Description of RecipePlan 2")
+                .time(LocalTime.of(11,30))
+                .build();
+        recipePlanEntity = recipePlanRepository.save(recipePlanEntity);
+
+        Long recipePlanId = recipePlanEntity.getId();
+
+        UpdateRecipePlanDto updateRecipePlanDto = new UpdateRecipePlanDto(
+                mealPlanEntity.getId(),
+                recipeEntity.getId(),
+                anotherRecipePlanEntity.getDescription(),
+                sameLocalTime.toString()
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipe-plans/{id}", recipePlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipePlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper);
+
+        assertThat(actualResult.getDetail())
+                .matches("^.*[Tt]ime.*already exists.*MealPlan.*$");
+
+        recipePlanEntity = recipePlanRepository.findById(recipePlanId).get();
+        assertThat(recipePlanEntity.getTime())
+                .isNotEqualTo(sameLocalTime);
+
+        // Document
+        resultActions.andDo(document("update-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe plan")
+                                .description("Finds and updates recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipePlan"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
 }
