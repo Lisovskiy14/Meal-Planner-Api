@@ -149,4 +149,38 @@ public class RecipePlanControllerIT extends AbstractIT {
         ));
     }
 
+    @Test
+    @SneakyThrows
+    @DisplayName("GetRecipePlanById - Should Return 404 Not Found")
+    public void getRecipePlanById_shouldReturn404NotFound() {
+        // Arrange
+        Long recipePlanId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/recipe-plans/{id}", recipePlanId)
+                        .accept(APPLICATION_PROBLEM_JSON)
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        // Document
+        resultActions.andDo(document("get-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get recipe plan")
+                                .description("Finds and returns recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
 }

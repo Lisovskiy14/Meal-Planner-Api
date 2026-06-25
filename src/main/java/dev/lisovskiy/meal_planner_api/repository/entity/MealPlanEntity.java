@@ -17,9 +17,9 @@ import java.util.List;
 public class MealPlanEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meal_plam_seq_gen")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meal_plan_seq_gen")
     @SequenceGenerator(
-            name = "meal_plam_seq_gen",
+            name = "meal_plan_seq_gen",
             sequenceName = "meal_plan_seq"
     )
     private Long id;
@@ -36,7 +36,6 @@ public class MealPlanEntity {
     )
     private List<RecipePlanEntity> recipePlans = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dayOfWeek", nullable = false)
+    @Column(name = "day_of_week", nullable = false)
     private DayOfWeek dayOfWeek;
 }
