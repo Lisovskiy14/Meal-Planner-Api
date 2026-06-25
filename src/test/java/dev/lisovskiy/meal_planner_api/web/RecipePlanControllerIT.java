@@ -71,6 +71,8 @@ public class RecipePlanControllerIT extends AbstractIT {
     @AfterEach
     public void cleanUp() {
         recipePlanRepository.deleteAll();
+        recipeRepository.deleteAll();
+        mealPlanRepository.deleteAll();
     }
 
     @Test
@@ -169,7 +171,7 @@ public class RecipePlanControllerIT extends AbstractIT {
         resultActions.andExpect(status().isNotFound());
 
         // Document
-        resultActions.andDo(document("get-recipe-plan-by-id",
+        resultActions.andDo(document("get-recipe-plan-by-id-not-found",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
@@ -318,7 +320,7 @@ public class RecipePlanControllerIT extends AbstractIT {
                 .hasFieldOrProperty(expectedPropertyExisting);
 
         // Document
-        resultActions.andDo(document("update-recipe-plan-by-id",
+        resultActions.andDo(document("update-recipe-plan-by-id-bad-request",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
@@ -365,7 +367,7 @@ public class RecipePlanControllerIT extends AbstractIT {
                 .isFalse();
 
         // Document
-        resultActions.andDo(document("update-recipe-plan-by-id",
+        resultActions.andDo(document("update-recipe-plan-by-id-not-found",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
@@ -451,7 +453,7 @@ public class RecipePlanControllerIT extends AbstractIT {
                 .isNotEqualTo(sameLocalTime);
 
         // Document
-        resultActions.andDo(document("update-recipe-plan-by-id",
+        resultActions.andDo(document("update-recipe-plan-by-id-conflict",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
@@ -464,6 +466,62 @@ public class RecipePlanControllerIT extends AbstractIT {
                                 )
                                 .requestSchema(Schema.schema("UpdateRecipePlan"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("DeleteRecipePlanById - Should Delete RecipePlan")
+    public void  deleteRecipePlanById_shouldDeleteRecipePlan() {
+        // Arrange
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .dayOfWeek(DayOfWeek.FRIDAY)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(15)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        RecipePlanEntity recipePlanEntity = RecipePlanEntity.builder()
+                .mealPlan(mealPlanEntity)
+                .recipe(recipeEntity)
+                .description("Description of RecipePlan 1")
+                .time(LocalTime.of(14, 0))
+                .build();
+        recipePlanEntity = recipePlanRepository.save(recipePlanEntity);
+
+        Long recipePlanId = recipePlanEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                delete("/api/v1/recipe-plans/{id}", recipePlanId)
+                        .accept(APPLICATION_JSON_VALUE)
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNoContent());
+
+        assertThat(recipePlanRepository.existsById(recipePlanId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("delete-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Delete recipe plan")
+                                .description("Deletes recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
                                 .build()
                 )
         ));
