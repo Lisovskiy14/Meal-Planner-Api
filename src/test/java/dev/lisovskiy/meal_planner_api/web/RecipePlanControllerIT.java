@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ProblemDetail;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -275,6 +276,61 @@ public class RecipePlanControllerIT extends AbstractIT {
                                     RecipePlanDtoSnippetProvider.getUpdateRecipePlanDtoFields()
                                 )
                                 .responseSchema(Schema.schema("RecipePlanDto"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipePlanById - Should Return 400 Bad Request")
+    public void  updateRecipePlanById_shouldReturn400BadRequest() {
+        // Arrange
+        UpdateRecipePlanDto updateRecipePlanDto = new UpdateRecipePlanDto(
+                0L,
+                0L,
+                "d".repeat(201),
+                "wrong time format"
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipe-plans/{id}", 1)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipePlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper);
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("update-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe plan")
+                                .description("Finds and updates recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipePlan"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
