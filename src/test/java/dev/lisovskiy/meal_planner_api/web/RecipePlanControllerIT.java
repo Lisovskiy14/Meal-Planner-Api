@@ -5,7 +5,9 @@ import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_plan.UpdateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
@@ -28,13 +30,13 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -178,6 +180,101 @@ public class RecipePlanControllerIT extends AbstractIT {
                                                 .description("Identifier of the target recipe plan.")
                                 )
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateRecipePlanById - Should Update and Return")
+    public void  updateRecipePlanById_shouldUpdateAndReturn() {
+        // Arrange
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .dayOfWeek(DayOfWeek.FRIDAY)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(15)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        RecipePlanEntity recipePlanEntity = RecipePlanEntity.builder()
+                .mealPlan(mealPlanEntity)
+                .recipe(recipeEntity)
+                .description("Description of RecipePlan 1")
+                .time(LocalTime.of(14, 0))
+                .build();
+        recipePlanEntity = recipePlanRepository.save(recipePlanEntity);
+
+        Long recipePlanId = recipePlanEntity.getId();
+
+        String updatedDescription = "Updated Description of RecipePlan 1";
+        LocalTime updatedTime = LocalTime.of(16, 0);
+
+        UpdateRecipePlanDto updateRecipePlanDto = new UpdateRecipePlanDto(
+                mealPlanEntity.getId(),
+                recipeEntity.getId(),
+                updatedDescription,
+                updatedTime.toString()
+        );
+
+        Recipe recipe = recipeEntityMapper.toRecipe(recipeEntity);
+        recipe.setRecipeIngredients(new ArrayList<>());
+
+        RecipePlanDto expectedResult = new RecipePlanDto(
+                recipePlanId,
+                recipeWebMapper.toRecipeDto(recipe),
+                updatedDescription,
+                updatedTime
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/recipe-plans/{id}", recipePlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(updateRecipePlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        RecipePlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipePlanDto.class, objectMapper);
+
+        assertThat(actualResult)
+                .isNotNull()
+                .isEqualTo(expectedResult);
+
+        RecipePlanEntity dbResult = recipePlanRepository.findById(recipePlanId).get();
+        assertThat(dbResult.getDescription())
+                .isEqualTo(updatedDescription);
+        assertThat(dbResult.getTime())
+            .isEqualTo(updatedTime);
+
+        // Document
+        resultActions.andDo(document("update-recipe-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update recipe plan")
+                                .description("Finds and updates recipe plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target recipe plan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateRecipePlan"))
+                                .requestFields(
+                                    RecipePlanDtoSnippetProvider.getUpdateRecipePlanDtoFields()
+                                )
+                                .responseSchema(Schema.schema("RecipePlanDto"))
                                 .build()
                 )
         ));

@@ -5,7 +5,7 @@ databaseChangeLog:
       changes:
 
         - createSequence:
-            sequenceName: recipe_plans_seq
+            sequenceName: recipe_plan_seq
             startValue: 1
             incrementBy: 50
             dataType: BIGINT
@@ -16,7 +16,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: BIGINT
-                  defaultValueComputed: "nextval('recipe_plans_seq')"
+                  defaultValueComputed: "nextval('recipe_plan_seq')"
                   constraints:
                     primaryKey: true
               - column:
