@@ -325,4 +325,50 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipePlan - Should Return 404 Not Found")
+    public void createRecipePlan_shouldReturn404NotFound() {
+        // Arrange
+        Long mealPlanId = 1L;
+        Long recipePlanId = 2L;
+
+        CreateRecipePlanDto createRecipePlanDto = new CreateRecipePlanDto(
+                mealPlanId,
+                "Description of Recipe Plan 1",
+                "14:00"
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/meal-plans/{mealPlanId}/recipe-plans", recipePlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipePlanDto))
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(recipePlanRepository.count())
+                .isEqualTo(0);
+
+        // Document
+        resultActions.andDo(document("create-recipe-plan-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe plan")
+                                .description("Creates and returns recipe plan.")
+                                .pathParameters(
+                                        parameterWithName("mealPlanId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target meal plan.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
 }
