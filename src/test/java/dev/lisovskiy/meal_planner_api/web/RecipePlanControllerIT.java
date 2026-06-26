@@ -526,5 +526,4 @@ public class RecipePlanControllerIT extends AbstractIT {
                 )
         ));
     }
-
 }

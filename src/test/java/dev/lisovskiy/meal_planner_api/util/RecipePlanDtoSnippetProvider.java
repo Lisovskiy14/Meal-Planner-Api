@@ -18,19 +18,32 @@ public class RecipePlanDtoSnippetProvider {
         String p = PrefixValidator.validate(prefix);
 
         Stream<FieldDescriptor> rootFields = Stream.of(
-                fieldWithPath("id")
+                fieldWithPath(p + "id")
                         .description("The recipe plan ID."),
-                fieldWithPath("description")
+                fieldWithPath(p + "description")
                         .description("The recipe plan description."),
-                fieldWithPath("time")
+                fieldWithPath(p + "time")
                         .description("Time to eat of recipe plan."),
-                fieldWithPath("recipe")
+                fieldWithPath(p + "recipe")
                         .type(JsonFieldType.OBJECT)
                         .description("Target recipe of recipe plan.")
         );
 
         Stream<FieldDescriptor> nestedFields = RecipeDtoSnippetProvider
                 .getEmptyRecipeDtoFieldsWithPrefix(p + "recipe").stream();
+
+        return Stream.concat(rootFields, nestedFields).toList();
+    }
+
+    public static List<FieldDescriptor> getRecipePlanListDtoFields() {
+        Stream<FieldDescriptor> rootFields = Stream.of(
+                fieldWithPath("recipePlans")
+                        .type(JsonFieldType.ARRAY)
+                        .description("List of recipe plans.")
+        );
+
+        Stream<FieldDescriptor> nestedFields = getRecipePlanDtoFieldsWithPrefix("recipePlans[]")
+                .stream();
 
         return Stream.concat(rootFields, nestedFields).toList();
     }
