@@ -5,6 +5,9 @@ import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.domain.Recipe;
+import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanListDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
@@ -13,8 +16,10 @@ import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
+import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipePlanDtoSnippetProvider;
+import dev.lisovskiy.meal_planner_api.web.mapper.RecipeWebMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,6 +61,12 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
 
     @Autowired
     private RecipeRepository recipeRepository;
+
+    @Autowired
+    private RecipeEntityMapper recipeEntityMapper;
+
+    @Autowired
+    private RecipeWebMapper recipeWebMapper;
 
     @AfterEach
     public void cleanUp() {
@@ -174,6 +185,84 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
                                                 .description("Identifier of the target meal plan.")
                                 )
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipePlan - Should Create And Return")
+    public void createRecipePlan_shouldCreateAndReturn() {
+        // Arrange
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe Title")
+                .instructions("Recipe Instructions")
+                .prepTimeMinutes(15)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        Long mealPlanId = mealPlanEntity.getId();
+        String description = "Description of Recipe Plan 1";
+        LocalTime time = LocalTime.of(14, 00);
+
+        CreateRecipePlanDto createRecipePlanDto = new CreateRecipePlanDto(
+                recipeEntity.getId(),
+                description,
+                time.toString()
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/meal-plans/{mealPlanId}/recipe-plans", mealPlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createRecipePlanDto))
+
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isCreated());
+
+        RecipePlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, RecipePlanDto.class, objectMapper
+        );
+
+        Long recipePlanId = actualResult.getId();
+        RecipeDto recipeDto = recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(recipeEntity));
+        RecipePlanDto expectedResult = new RecipePlanDto(
+                recipePlanId,
+                recipeDto,
+                description,
+                time
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        assertThat(recipePlanRepository.existsById(recipePlanId))
+                .isTrue();
+
+        // Document
+        resultActions.andDo(document("create-recipe-plan",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe plan")
+                                .description("Creates and returns recipe plan.")
+                                .pathParameters(
+                                        parameterWithName("mealPlanId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target meal plan.")
+                                )
+                                .responseSchema(Schema.schema("RecipePlanDto"))
                                 .build()
                 )
         ));
