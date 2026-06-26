@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ProblemDetail;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -263,6 +264,63 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
                                                 .description("Identifier of the target meal plan.")
                                 )
                                 .responseSchema(Schema.schema("RecipePlanDto"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipePlan - Should Return 400 Bad Request")
+    public void createRecipePlan_shouldReturn400BadRequest() {
+        // Arrange
+        CreateRecipePlanDto createRecipePlanDto = new CreateRecipePlanDto(
+                0L,
+                "d".repeat(201),
+                "wrong time pattern"
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/meal-plans/{mealPlanId}/recipe-plans", 1L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createRecipePlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        assertThat(recipePlanRepository.count())
+                .isEqualTo(0);
+
+        // Document
+        resultActions.andDo(document("create-recipe-plan-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe plan")
+                                .description("Creates and returns recipe plan.")
+                                .pathParameters(
+                                        parameterWithName("mealPlanId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target meal plan.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
