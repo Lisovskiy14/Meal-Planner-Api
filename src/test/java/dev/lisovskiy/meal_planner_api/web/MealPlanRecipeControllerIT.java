@@ -10,6 +10,7 @@ import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanListDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_plan.UpdateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
@@ -356,6 +357,81 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
 
         // Document
         resultActions.andDo(document("create-recipe-plan-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create recipe plan")
+                                .description("Creates and returns recipe plan.")
+                                .pathParameters(
+                                        parameterWithName("mealPlanId")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target meal plan.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateRecipePlan - Should Return 409 Conflict")
+    public void  createRecipePlan_shouldReturn409Conflict() {
+        // Arrange
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .dayOfWeek(DayOfWeek.FRIDAY)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .title("Recipe 1")
+                .instructions("Instructions of Recipe 1")
+                .prepTimeMinutes(15)
+                .build();
+        recipeEntity = recipeRepository.save(recipeEntity);
+
+        LocalTime sameLocalTime = LocalTime.of(14, 0);
+
+        RecipePlanEntity anotherRecipePlanEntity = RecipePlanEntity.builder()
+                .mealPlan(mealPlanEntity)
+                .recipe(recipeEntity)
+                .description("Description of RecipePlan 1")
+                .time(sameLocalTime)
+                .build();
+        anotherRecipePlanEntity = recipePlanRepository.save(anotherRecipePlanEntity);
+
+        CreateRecipePlanDto updateRecipePlanDto = new CreateRecipePlanDto(
+                recipeEntity.getId(),
+                "Description of RecipePlan 2",
+                sameLocalTime.toString()
+        );
+
+        Long mealPlanId = mealPlanEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/meal-plans/{mealPlanId}/recipe-plans", mealPlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(updateRecipePlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isConflict());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper);
+
+        assertThat(actualResult.getDetail())
+                .matches("^.*[Tt]ime.*already exists.*MealPlan.*$");
+
+        assertThat(recipePlanRepository.count())
+                .isEqualTo(1);
+
+        // Document
+        resultActions.andDo(document("create-recipe-plan-conflict",
                 resource(
                         ResourceSnippetParameters.builder()
                                 .tag(SCHEMA_TAG)
