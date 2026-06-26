@@ -5,12 +5,10 @@ import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
-import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanListDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe_plan.UpdateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
@@ -40,7 +38,6 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithNam
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
