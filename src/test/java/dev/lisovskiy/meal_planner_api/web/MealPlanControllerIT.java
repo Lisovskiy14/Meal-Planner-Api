@@ -398,4 +398,57 @@ public class MealPlanControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateMealPlanById - Should Return 400 Bad Request")
+    public void updateMealPlanById_shouldReturn400BadRequest() {
+        // Arrange
+        UpdateMealPlanDto createMealPlanDto = new UpdateMealPlanDto(
+                "d".repeat(501), "Not Valid Day Of Week"
+        );
+
+        String expectedResultTitle = "Validation Error";
+        String expectedPropertyExisting = "errors";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/meal-plans/{id}", 1L)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createMealPlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isBadRequest());
+
+        ProblemDetail actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, ProblemDetail.class, objectMapper
+        );
+
+        assertThat(actualResult.getTitle())
+                .isEqualTo(expectedResultTitle);
+        assertThat(actualResult.getProperties())
+                .hasFieldOrProperty(expectedPropertyExisting);
+
+        // Document
+        resultActions.andDo(document("update-meal-plan-by-id-bad-request",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update meal plan By Id.")
+                                .description("Updates and returns updated meal plan.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateMealPlanDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
 }
