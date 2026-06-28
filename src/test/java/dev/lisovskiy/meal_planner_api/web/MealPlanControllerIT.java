@@ -495,4 +495,46 @@ public class MealPlanControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("DeleteMealPlanById - Should Delete MealPlan")
+    public void deleteMealPlanById_shouldDeleteMealPlan() {
+        // Arrange
+        MealPlanEntity existingMealPlanEntity = MealPlanEntity.builder()
+                .description("Old Description")
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .build();
+        existingMealPlanEntity = mealPlanRepository.save(existingMealPlanEntity);
+
+        Long mealPlanId = existingMealPlanEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                delete("/api/v1/meal-plans/{id}", mealPlanId)
+                        .accept(APPLICATION_JSON_VALUE)
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNoContent());
+
+        assertThat(mealPlanRepository.existsById(mealPlanId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("delete-meal-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Delete meal plan By Id.")
+                                .description("Deletes existing meal plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
+                                .build()
+                )
+        ));
+    }
 }
