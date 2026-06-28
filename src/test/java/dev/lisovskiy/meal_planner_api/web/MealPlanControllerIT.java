@@ -5,8 +5,11 @@ import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.domain.RecipePlan;
+import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanListDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
@@ -194,6 +198,66 @@ public class MealPlanControllerIT extends AbstractIT {
                                                 .description("Identifier of the target MealPlan.")
                                 )
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("CreateMealPlan - Should Create And Return MealPlan")
+    public void createMealPlan_shouldCreateAndReturnMealPlan() {
+        // Arrange
+        String description = "Meal Plan 1";
+        DayOfWeek dayOfWeek = DayOfWeek.MONDAY;
+        List<RecipePlanDto> recipePlans = new ArrayList<>();
+
+        CreateMealPlanDto createMealPlanDto = new CreateMealPlanDto(
+                description, dayOfWeek.toString()
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                post("/api/v1/meal-plans")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createMealPlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isCreated());
+
+        MealPlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, MealPlanDto.class, objectMapper
+        );
+
+        MealPlanDto expectedResult = new MealPlanDto(
+                actualResult.getId(),
+                description,
+                recipePlans,
+                dayOfWeek
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        assertThat(mealPlanRepository.existsById(actualResult.getId()))
+                .isTrue();
+
+        // Document
+        resultActions.andDo(document("create-meal-plan",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Create meal plan.")
+                                .description("Creates and returns new meal plan.")
+                                .requestSchema(Schema.schema("CreateMealPlanDto"))
+                                .requestFields(
+                                        MealPlanDtoSnippetProvider.getCreateOrUpdateMealPlanDtoFields()
+                                )
+                                .responseSchema(Schema.schema("MealPlanDto"))
                                 .build()
                 )
         ));

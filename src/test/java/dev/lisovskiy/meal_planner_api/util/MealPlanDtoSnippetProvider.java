@@ -43,4 +43,13 @@ public class MealPlanDtoSnippetProvider {
 
         return Stream.concat(rootFields, nestedFields).toList();
     }
+
+    public static List<FieldDescriptor> getCreateOrUpdateMealPlanDtoFields() {
+        return List.of(
+                fieldWithPath("description")
+                        .description("Description of a new MealPlan."),
+                fieldWithPath("dayOfWeek")
+                        .description("Scheduled day of week of a new MealPlan.")
+        );
+    }
 }
