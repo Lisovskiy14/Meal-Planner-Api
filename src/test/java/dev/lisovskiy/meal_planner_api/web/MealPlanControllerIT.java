@@ -451,4 +451,48 @@ public class MealPlanControllerIT extends AbstractIT {
                 )
         ));
     }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateMealPlanById - Should Return 404 Not Found")
+    public void updateMealPlanById_shouldReturn404NotFound() {
+        // Arrange
+        UpdateMealPlanDto createMealPlanDto = new UpdateMealPlanDto(
+                "New Description", "TUESDAY"
+        );
+
+        Long unexistingMealPlanId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/meal-plans/{id}", unexistingMealPlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_PROBLEM_JSON)
+                        .content(objectMapper.writeValueAsString(createMealPlanDto))
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(mealPlanRepository.existsById(unexistingMealPlanId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("update-meal-plan-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update meal plan By Id.")
+                                .description("Updates and returns updated meal plan.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateMealPlanDto"))
+                                .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
 }
