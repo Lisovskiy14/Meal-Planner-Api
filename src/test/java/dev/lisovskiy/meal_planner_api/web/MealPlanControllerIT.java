@@ -4,6 +4,7 @@ import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
+import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanListDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
@@ -97,6 +98,58 @@ public class MealPlanControllerIT extends AbstractIT {
                                 .responseSchema(Schema.schema("MealPlanListDto"))
                                 .responseFields(
                                         MealPlanDtoSnippetProvider.getMealPlanListDtoFields()
+                                )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetMealPlanById - Should Return MealPlan")
+    public void getMealPlanById_shouldReturnMealPlan() {
+        // Arrange
+        String expectedDescription = "Meal Plan 1";
+        DayOfWeek expectedDayOfWeek = DayOfWeek.MONDAY;
+
+        MealPlanEntity mealPlanEntity = MealPlanEntity.builder()
+                .description(expectedDescription)
+                .dayOfWeek(expectedDayOfWeek)
+                .build();
+        mealPlanEntity = mealPlanRepository.save(mealPlanEntity);
+
+        Long mealPlanId = mealPlanEntity.getId();
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/meal-plans/{id}", mealPlanId)
+                        .accept(APPLICATION_JSON_VALUE)
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        MealPlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, MealPlanDto.class, objectMapper
+        );
+
+        assertThat(actualResult.getDescription())
+                .isEqualTo(expectedDescription);
+        assertThat(actualResult.getDayOfWeek())
+                .isEqualTo(expectedDayOfWeek);
+
+        // Document
+        resultActions.andDo(document("get-meal-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get meal plan by ID.")
+                                .description("Finds and returns existing meal plan by its ID.")
+                                .responseSchema(Schema.schema("MealPlanDto"))
+                                .responseFields(
+                                        MealPlanDtoSnippetProvider.getMealPlanDtoFields()
                                 )
                                 .build()
                 )
