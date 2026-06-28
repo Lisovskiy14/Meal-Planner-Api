@@ -9,11 +9,14 @@ import dev.lisovskiy.meal_planner_api.domain.RecipePlan;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanListDto;
+import dev.lisovskiy.meal_planner_api.dto.meal_plan.UpdateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.service.mapper.MealPlanEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.MealPlanDtoSnippetProvider;
+import dev.lisovskiy.meal_planner_api.web.mapper.MealPlanWebMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +52,12 @@ public class MealPlanControllerIT extends AbstractIT {
 
     @Autowired
     private MealPlanRepository mealPlanRepository;
+
+    @Autowired
+    private MealPlanEntityMapper mealPlanEntityMapper;
+
+    @Autowired
+    private MealPlanWebMapper mealPlanWebMapper;
 
     @AfterEach
     public void cleanUp() {
@@ -310,6 +319,81 @@ public class MealPlanControllerIT extends AbstractIT {
                                 .description("Creates and returns new meal plan.")
                                 .requestSchema(Schema.schema("CreateMealPlanDto"))
                                 .responseSchema(Schema.schema("ProblemDetail"))
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("UpdateMealPlanById - Should Update And Return MealPlan")
+    public void updateMealPlanById_shouldUpdateAndReturnMealPlan() {
+        // Arrange
+        MealPlanEntity existingMealPlanEntity = MealPlanEntity.builder()
+                .description("Old Description")
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .build();
+        existingMealPlanEntity = mealPlanRepository.save(existingMealPlanEntity);
+
+        Long mealPlanId = existingMealPlanEntity.getId();
+        String newDescription = "New Description";
+        DayOfWeek newDayOfWeek = DayOfWeek.TUESDAY;
+        List<RecipePlanDto> recipePlans = new ArrayList<>();
+
+        UpdateMealPlanDto createMealPlanDto = new UpdateMealPlanDto(
+                newDescription, newDayOfWeek.toString()
+        );
+
+        MealPlanDto expectedResult = new MealPlanDto(
+                mealPlanId,
+                newDescription,
+                recipePlans,
+                newDayOfWeek
+        );
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                put("/api/v1/meal-plans/{id}", mealPlanId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(createMealPlanDto))
+        );
+
+        MvcResult mvcResult = resultActions.andReturn();
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+
+        MealPlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, MealPlanDto.class, objectMapper
+        );
+
+        assertThat(actualResult)
+                .isEqualTo(expectedResult);
+
+        MealPlanDto dbResult = mealPlanWebMapper.toMealPlanDto(mealPlanEntityMapper.toMealPlan(
+                mealPlanRepository.findWithRecipePlansById(mealPlanId).get()
+        ));
+        assertThat(dbResult)
+                .isEqualTo(expectedResult);
+
+        // Document
+        resultActions.andDo(document("update-meal-plan-by-id",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Update meal plan By Id.")
+                                .description("Updates and returns updated meal plan.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
+                                .requestSchema(Schema.schema("UpdateMealPlanDto"))
+                                .requestFields(
+                                        MealPlanDtoSnippetProvider.getCreateOrUpdateMealPlanDtoFields()
+                                )
+                                .responseSchema(Schema.schema("MealPlanDto"))
                                 .build()
                 )
         ));
