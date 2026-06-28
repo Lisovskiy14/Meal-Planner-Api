@@ -2,6 +2,7 @@ package dev.lisovskiy.meal_planner_api.web;
 
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
@@ -147,10 +148,52 @@ public class MealPlanControllerIT extends AbstractIT {
                                 .tag(SCHEMA_TAG)
                                 .summary("Get meal plan by ID.")
                                 .description("Finds and returns existing meal plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
                                 .responseSchema(Schema.schema("MealPlanDto"))
                                 .responseFields(
                                         MealPlanDtoSnippetProvider.getMealPlanDtoFields()
                                 )
+                                .build()
+                )
+        ));
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("GetMealPlanById - Should Return 404 Not Found")
+    public void getMealPlanById_shouldReturn404NotFound() {
+        // Arrange
+        Long mealPlanId = 1L;
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/v1/meal-plans/{id}", mealPlanId)
+                        .accept(APPLICATION_PROBLEM_JSON)
+        );
+
+        // Assert
+        resultActions.andExpect(status().isNotFound());
+
+        assertThat(mealPlanRepository.existsById(mealPlanId))
+                .isFalse();
+
+        // Document
+        resultActions.andDo(document("get-meal-plan-by-id-not-found",
+                resource(
+                        ResourceSnippetParameters.builder()
+                                .tag(SCHEMA_TAG)
+                                .summary("Get meal plan by ID.")
+                                .description("Finds and returns existing meal plan by its ID.")
+                                .pathParameters(
+                                        parameterWithName("id")
+                                                .type(SimpleType.NUMBER)
+                                                .description("Identifier of the target MealPlan.")
+                                )
+                                .responseSchema(Schema.schema("ProblemDetail"))
                                 .build()
                 )
         ));
