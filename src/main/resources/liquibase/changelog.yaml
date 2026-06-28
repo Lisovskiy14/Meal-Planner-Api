@@ -5,3 +5,7 @@ databaseChangeLog:
       file: liquibase/db.changelog-recipe.yaml
   - include:
       file: liquibase/db.changelog-recipe-ingredient.yaml
+  - include:
+      file: liquibase/db.changelog-meal-plan.yaml
+  - include:
+      file: liquibase/db.changelog-recipe-plan.yaml

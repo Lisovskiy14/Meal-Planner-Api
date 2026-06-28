@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: meal-planner-4
+      author: lisovskiy14
+      changes:
+
+        - createSequence:
+            sequenceName: meal_plan_seq
+            startValue: 1
+            incrementBy: 50
+            dataType: BIGINT
+
+        - createTable:
+            tableName: meal_plans
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  defaultValueComputed: "nextval('meal_plan_seq')"
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: day_of_week
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
