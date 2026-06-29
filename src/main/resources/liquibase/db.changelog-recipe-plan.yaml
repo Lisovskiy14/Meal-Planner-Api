@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: meal-planner-5
+      author: lisovskiy14
+      changes:
+
+        - createSequence:
+            sequenceName: recipe_plan_seq
+            startValue: 1
+            incrementBy: 50
+            dataType: BIGINT
+
+        - createTable:
+            tableName: recipe_plans
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  defaultValueComputed: "nextval('recipe_plan_seq')"
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: meal_plan_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recipe_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: time
+                  type: TIME
+
+        - addForeignKeyConstraint:
+            baseTableName: recipe_plans
+            baseColumnNames: meal_plan_id
+            referencedTableName: meal_plans
+            referencedColumnNames: id
+            constraintName: fk_recipe_plans_meal_plan
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: recipe_plans
+            baseColumnNames: recipe_id
+            referencedTableName: recipes
+            referencedColumnNames: id
+            constraintName: fk_recipe_plans_recipe
+
+        - addUniqueConstraint:
+            tableName: recipe_plans
+            columnNames: meal_plan_id, time
+            constraintName: uq_recipe_plans_meal_plan_time

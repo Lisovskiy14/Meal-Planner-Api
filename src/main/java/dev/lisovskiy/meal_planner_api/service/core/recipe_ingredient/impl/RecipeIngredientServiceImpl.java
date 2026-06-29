@@ -1,4 +1,4 @@
-package dev.lisovskiy.meal_planner_api.service.impl;
+package dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient.impl;
 
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
@@ -8,13 +8,14 @@ import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
 import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
-import dev.lisovskiy.meal_planner_api.service.IngredientServiceCommunicator;
-import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
-import dev.lisovskiy.meal_planner_api.service.RecipeService;
+import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientServiceCommunicator;
+import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeService;
+import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.RecipeIngredientNotFoundException;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeIngredientEntityMapper;
+import dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.util.IngredientUnitMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final RecipeIngredientEntityMapper recipeIngredientEntityMapper;
 
-    private final RecipeService recipeService;
+    private final RecipeServiceCommunicator recipeServiceCommunicator;
     private final RecipeEntityMapper recipeEntityMapper;
 
     private final IngredientServiceCommunicator ingredientServiceCommunicator;
@@ -39,7 +40,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional(readOnly = true)
     public List<RecipeIngredient> getAllRecipeIngredients(Long recipeId) {
-        recipeService.getRecipeById(recipeId);
+        recipeServiceCommunicator.getRecipeEntityById(recipeId);
         return recipeIngredientRepository.findAllByRecipe_Id(recipeId).stream()
                 .map(recipeIngredientEntityMapper::toRecipeIngredient)
                 .toList();
@@ -59,12 +60,13 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
             List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
     ) {
         List<RecipeIngredientEntity> recipeIngredientEntities = new ArrayList<>();
-        RecipeEntity recipeEntity = recipeEntityMapper.toRecipeEntity(
-                recipeService.getRecipeById(recipeId));
+        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntityById(recipeId);
 
         for (CreateRecipeIngredientDto createRecipeIngredientDto : createRecipeIngredientDtoList) {
 
-            IngredientEntity ingredientEntity = ingredientServiceCommunicator.getIngredientEntityById(createRecipeIngredientDto.getIngredientId());
+            IngredientEntity ingredientEntity = ingredientServiceCommunicator.getIngredientEntityById(
+                    createRecipeIngredientDto.getIngredientId()
+            );
 
             RecipeIngredientEntity recipeIngredientEntity = RecipeIngredientEntity.builder()
                     .recipe(recipeEntity)
@@ -121,7 +123,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     }
 
     private RecipeIngredientEntity getRecipeIngredientEntityById(Long recipeId, Long ingredientId) {
-        recipeService.getRecipeById(recipeId);
+        recipeServiceCommunicator.getRecipeEntityById(recipeId);
         ingredientServiceCommunicator.getIngredientEntityById(ingredientId);
 
         RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);

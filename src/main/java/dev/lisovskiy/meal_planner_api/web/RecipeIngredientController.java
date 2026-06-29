@@ -3,7 +3,7 @@ package dev.lisovskiy.meal_planner_api.web;
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.*;
 import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
-import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
+import dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeIngredientWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

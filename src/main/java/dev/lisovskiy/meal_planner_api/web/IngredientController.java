@@ -6,7 +6,7 @@ import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientListDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
-import dev.lisovskiy.meal_planner_api.service.IngredientService;
+import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientService;
 import dev.lisovskiy.meal_planner_api.web.mapper.IngredientWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,12 +1,12 @@
-package dev.lisovskiy.meal_planner_api.service.impl;
+package dev.lisovskiy.meal_planner_api.service.core.recipe.impl;
 
 import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
 import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredientDto;
-import dev.lisovskiy.meal_planner_api.service.RecipeFacade;
-import dev.lisovskiy.meal_planner_api.service.RecipeIngredientService;
-import dev.lisovskiy.meal_planner_api.service.RecipeService;
+import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeFacade;
+import dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient.RecipeIngredientService;
+import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,15 +1,15 @@
-package dev.lisovskiy.meal_planner_api.service.impl;
+package dev.lisovskiy.meal_planner_api.service.core.ingredient.impl;
 
 import dev.lisovskiy.meal_planner_api.domain.Ingredient;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
-import dev.lisovskiy.meal_planner_api.service.IngredientService;
 import dev.lisovskiy.meal_planner_api.service.exception.conflict.impl.IngredientAlreadyExistsException;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.IngredientNotFoundException;
+import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientService;
+import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
-import dev.lisovskiy.meal_planner_api.service.IngredientServiceCommunicator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
