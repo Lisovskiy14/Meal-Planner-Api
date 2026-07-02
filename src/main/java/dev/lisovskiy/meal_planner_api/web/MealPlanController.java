@@ -1,10 +1,7 @@
 package dev.lisovskiy.meal_planner_api.web;
 
 import dev.lisovskiy.meal_planner_api.domain.MealPlan;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanListDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.UpdateMealPlanDto;
+import dev.lisovskiy.meal_planner_api.dto.meal_plan.*;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanService;
 import dev.lisovskiy.meal_planner_api.web.mapper.MealPlanWebMapper;
 import jakarta.validation.Valid;
@@ -31,7 +28,7 @@ public class MealPlanController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new MealPlanListDto(
                         mealPlans.stream()
-                                .map(mealPlanWebMapper::toMealPlanDto)
+                                .map(mealPlanWebMapper::toMealPlanSummaryDto)
                                 .toList()
                 ));
     }
@@ -45,24 +42,24 @@ public class MealPlanController {
     }
 
     @PostMapping
-    public ResponseEntity<MealPlanDto> createMealPlan(
+    public ResponseEntity<MealPlanSummaryDto> createMealPlan(
             @RequestBody @Valid CreateMealPlanDto createMealPlanDto
     ) {
         MealPlan mealPlan = mealPlanService.createMealPlan(createMealPlanDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mealPlanWebMapper.toMealPlanDto(mealPlan));
+                .body(mealPlanWebMapper.toMealPlanSummaryDto(mealPlan));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MealPlanDto> updateMealPlanById(
+    public ResponseEntity<MealPlanSummaryDto> updateMealPlanById(
             @PathVariable Long id,
             @RequestBody @Valid UpdateMealPlanDto updateMealPlanDto
     ) {
         MealPlan mealPlan = mealPlanService.updateMealPlanById(id, updateMealPlanDto);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(mealPlanWebMapper.toMealPlanDto(mealPlan));
+                .body(mealPlanWebMapper.toMealPlanSummaryDto(mealPlan));
     }
 
     @DeleteMapping("/{id}")

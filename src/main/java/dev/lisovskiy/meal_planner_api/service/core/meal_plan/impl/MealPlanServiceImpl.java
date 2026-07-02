@@ -34,7 +34,7 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
     @Override
     @Transactional(readOnly = true)
     public MealPlan getMealPlanById(Long id) {
-        MealPlanEntity mealPlanEntity = getMealPlanEntityById(id);
+        MealPlanEntity mealPlanEntity = getMealPlanEntityWithRecipesById(id);
         return mealPlanEntityMapper.toMealPlan(mealPlanEntity);
     }
 
@@ -55,7 +55,7 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
     @Override
     @Transactional
     public MealPlan updateMealPlanById(Long id, UpdateMealPlanDto updateMealPlanDto) {
-        MealPlanEntity mealPlanEntity = getMealPlanEntityById(id);
+        MealPlanEntity mealPlanEntity = getMealPlanEntitySummaryById(id);
 
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(updateMealPlanDto.getDayOfWeek());
 
@@ -74,7 +74,13 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
 
     @Override
     @Transactional(readOnly = true)
-    public MealPlanEntity getMealPlanEntityById(Long id) {
+    public MealPlanEntity getMealPlanEntitySummaryById(Long id) {
+        return mealPlanRepository.findById(id)
+                .orElseThrow(() -> new MealPlanNotFoundException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public MealPlanEntity getMealPlanEntityWithRecipesById(Long id) {
         return mealPlanRepository.findWithRecipesById(id)
                 .orElseThrow(() -> new MealPlanNotFoundException(id));
     }

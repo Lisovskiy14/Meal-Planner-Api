@@ -35,7 +35,7 @@ public class RecipeServiceImpl implements RecipeService, RecipeServiceCommunicat
     @Override
     @Transactional(readOnly = true)
     public Recipe getRecipeById(Long id) {
-        RecipeEntity recipeEntity = getRecipeEntityById(id);
+        RecipeEntity recipeEntity = getRecipeEntityWithIngredientsById(id);
         return recipeEntityMapper.toRecipe(recipeEntity);
     }
 
@@ -61,7 +61,7 @@ public class RecipeServiceImpl implements RecipeService, RecipeServiceCommunicat
     @Override
     @Transactional
     public Recipe updateRecipeById(Long id, UpdateRecipeDto updateRecipeDto) {
-        RecipeEntity recipeEntity = getRecipeEntityById(id);
+        RecipeEntity recipeEntity = getRecipeEntitySummaryById(id);
 
         String title = updateRecipeDto.getTitle();
         boolean titleAlreadyExists = recipeRepository.existsByTitle(title);
@@ -86,7 +86,12 @@ public class RecipeServiceImpl implements RecipeService, RecipeServiceCommunicat
 
     @Override
     @Transactional
-    public RecipeEntity getRecipeEntityById(Long id) {
+    public RecipeEntity getRecipeEntitySummaryById(Long id) {
+        return recipeRepository.findById(id)
+                .orElseThrow(() -> new RecipeNotFoundException(id));
+    }
+
+    private RecipeEntity getRecipeEntityWithIngredientsById(Long id) {
         return recipeRepository.findWithIngredientsById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
     }

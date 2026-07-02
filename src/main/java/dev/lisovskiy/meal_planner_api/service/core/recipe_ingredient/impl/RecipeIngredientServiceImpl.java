@@ -11,8 +11,6 @@ import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeIngredientId;
 import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.RecipeIngredientNotFoundException;
-import dev.lisovskiy.meal_planner_api.service.mapper.IngredientEntityMapper;
-import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeIngredientEntityMapper;
 import dev.lisovskiy.meal_planner_api.service.core.recipe_ingredient.RecipeIngredientService;
 import dev.lisovskiy.meal_planner_api.util.IngredientUnitMapper;
@@ -36,7 +34,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional(readOnly = true)
     public List<RecipeIngredient> getAllRecipeIngredients(Long recipeId) {
-        recipeServiceCommunicator.getRecipeEntityById(recipeId);
+        recipeServiceCommunicator.getRecipeEntitySummaryById(recipeId);
         return recipeIngredientRepository.findAllWithIngredientsByRecipe_Id(recipeId).stream()
                 .map(recipeIngredientEntityMapper::toRecipeIngredient)
                 .toList();
@@ -45,7 +43,8 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Override
     @Transactional(readOnly = true)
     public RecipeIngredient getRecipeIngredientById(Long recipeId, Long ingredientId) {
-        RecipeIngredientEntity recipeIngredientEntity = getRecipeIngredientEntityById(recipeId, ingredientId);
+        RecipeIngredientEntity recipeIngredientEntity =
+                getRecipeIngredientEntityWithIngredientById(recipeId, ingredientId);
         return recipeIngredientEntityMapper.toRecipeIngredient(recipeIngredientEntity);
     }
 
@@ -56,7 +55,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
             List<CreateRecipeIngredientDto> createRecipeIngredientDtoList
     ) {
         List<RecipeIngredientEntity> recipeIngredientEntities = new ArrayList<>();
-        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntityById(recipeId);
+        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntitySummaryById(recipeId);
 
         for (CreateRecipeIngredientDto createRecipeIngredientDto : createRecipeIngredientDtoList) {
 
@@ -87,7 +86,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
             Long recipeId, Long ingredientId,
             UpdateRecipeIngredientDto updateRecipeIngredientDto
     ) {
-        RecipeIngredientEntity recipeIngredientEntity = getRecipeIngredientEntityById(recipeId, ingredientId);
+        RecipeIngredientEntity recipeIngredientEntity = getRecipeIngredientEntitySummaryById(recipeId, ingredientId);
 
         Long newIngredientId = updateRecipeIngredientDto.getIngredientId();
         if (!ingredientId.equals(newIngredientId)) {
@@ -118,12 +117,8 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
                 new RecipeIngredientId(recipeId, ingredientId));
     }
 
-    private RecipeIngredientEntity getRecipeIngredientEntityById(Long recipeId, Long ingredientId) {
-        recipeServiceCommunicator.getRecipeEntityById(recipeId);
-        ingredientServiceCommunicator.getIngredientEntityById(ingredientId);
-
-        RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
-
+    private RecipeIngredientEntity getRecipeIngredientEntityWithIngredientById(Long recipeId, Long ingredientId) {
+        RecipeIngredientId recipeIngredientId = validateAndReturnComposedId(recipeId, ingredientId);
         return recipeIngredientRepository.findWithIngredientById(recipeIngredientId)
                 .orElseThrow(() ->
                         new RecipeIngredientNotFoundException(
@@ -131,5 +126,23 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
                                 recipeIngredientId.getIngredientId()
                         )
                 );
+    }
+
+    private RecipeIngredientEntity getRecipeIngredientEntitySummaryById(Long recipeId, Long ingredientId) {
+        RecipeIngredientId recipeIngredientId = validateAndReturnComposedId(recipeId, ingredientId);
+        return recipeIngredientRepository.findWithIngredientById(recipeIngredientId)
+                .orElseThrow(() ->
+                        new RecipeIngredientNotFoundException(
+                                recipeIngredientId.getRecipeId(),
+                                recipeIngredientId.getIngredientId()
+                        )
+                );
+    }
+
+    private RecipeIngredientId validateAndReturnComposedId(Long recipeId, Long ingredientId) {
+        recipeServiceCommunicator.getRecipeEntitySummaryById(recipeId);
+        ingredientServiceCommunicator.getIngredientEntityById(ingredientId);
+
+        return new RecipeIngredientId(recipeId, ingredientId);
     }
 }
