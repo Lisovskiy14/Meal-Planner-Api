@@ -97,7 +97,7 @@ public class RecipePlanServiceImpl implements RecipePlanService {
     }
 
     private RecipePlanEntity getRecipePlanEntityById(Long recipePlanId) {
-        return recipePlanRepository.findById(recipePlanId)
+        return recipePlanRepository.findWithRecipeById(recipePlanId)
                 .orElseThrow(() -> new RecipePlanNotFoundException(recipePlanId));
     }
 

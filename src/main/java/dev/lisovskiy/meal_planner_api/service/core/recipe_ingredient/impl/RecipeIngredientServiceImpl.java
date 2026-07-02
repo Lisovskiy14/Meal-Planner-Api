@@ -31,10 +31,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     private final RecipeIngredientEntityMapper recipeIngredientEntityMapper;
 
     private final RecipeServiceCommunicator recipeServiceCommunicator;
-    private final RecipeEntityMapper recipeEntityMapper;
-
     private final IngredientServiceCommunicator ingredientServiceCommunicator;
-    private final IngredientEntityMapper ingredientEntityMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -127,7 +124,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
 
         RecipeIngredientId recipeIngredientId = new RecipeIngredientId(recipeId, ingredientId);
 
-        return recipeIngredientRepository.findById(recipeIngredientId)
+        return recipeIngredientRepository.findWithIngredientById(recipeIngredientId)
                 .orElseThrow(() ->
                         new RecipeIngredientNotFoundException(
                                 recipeIngredientId.getRecipeId(),

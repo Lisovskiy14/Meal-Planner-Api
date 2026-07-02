@@ -87,7 +87,7 @@ public class RecipeServiceImpl implements RecipeService, RecipeServiceCommunicat
     @Override
     @Transactional
     public RecipeEntity getRecipeEntityById(Long id) {
-        return recipeRepository.findById(id)
+        return recipeRepository.findWithIngredientsById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
     }
 }

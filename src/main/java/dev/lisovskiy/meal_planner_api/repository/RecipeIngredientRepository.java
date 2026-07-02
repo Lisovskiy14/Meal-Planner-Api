@@ -7,10 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredientEntity, RecipeIngredientId> {
 
     @EntityGraph(attributePaths = {"ingredient"})
     Collection<RecipeIngredientEntity> findAllWithIngredientsByRecipe_Id(Long recipeId);
+
+    @EntityGraph(attributePaths = {"ingredient"})
+    Optional<RecipeIngredientEntity> findWithIngredientById(RecipeIngredientId id);
 }

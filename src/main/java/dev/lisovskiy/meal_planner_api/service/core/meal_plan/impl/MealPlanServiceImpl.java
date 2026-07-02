@@ -75,7 +75,7 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
     @Override
     @Transactional(readOnly = true)
     public MealPlanEntity getMealPlanEntityById(Long id) {
-        return mealPlanRepository.findById(id)
+        return mealPlanRepository.findWithRecipesById(id)
                 .orElseThrow(() -> new MealPlanNotFoundException(id));
     }
 }
