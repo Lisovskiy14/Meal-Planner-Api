@@ -371,7 +371,7 @@ public class MealPlanControllerIT extends AbstractIT {
                 .isEqualTo(expectedResult);
 
         MealPlanDto dbResult = mealPlanWebMapper.toMealPlanDto(mealPlanEntityMapper.toMealPlan(
-                mealPlanRepository.findWithRecipePlansById(mealPlanId).get()
+                mealPlanRepository.findWithRecipesById(mealPlanId).get()
         ));
         assertThat(dbResult)
                 .isEqualTo(expectedResult);

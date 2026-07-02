@@ -125,7 +125,7 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
         assertThat(actualResult.getRecipePlans())
                 .hasSize(recipePlanEntities.size());
 
-        mealPlanEntity = mealPlanRepository.findWithRecipePlansById(mealPlanId).get();
+        mealPlanEntity = mealPlanRepository.findWithRecipesById(mealPlanId).get();
         assertThat(mealPlanEntity.getRecipePlans())
                 .extracting(RecipePlanEntity::getId)
                 .containsExactlyInAnyOrderElementsOf(

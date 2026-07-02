@@ -40,7 +40,7 @@ public class RecipeIngredientServiceImpl implements RecipeIngredientService {
     @Transactional(readOnly = true)
     public List<RecipeIngredient> getAllRecipeIngredients(Long recipeId) {
         recipeServiceCommunicator.getRecipeEntityById(recipeId);
-        return recipeIngredientRepository.findAllByRecipe_Id(recipeId).stream()
+        return recipeIngredientRepository.findAllWithIngredientsByRecipe_Id(recipeId).stream()
                 .map(recipeIngredientEntityMapper::toRecipeIngredient)
                 .toList();
     }

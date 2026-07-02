@@ -34,7 +34,7 @@ public class RecipePlanServiceImpl implements RecipePlanService {
     @Transactional(readOnly = true)
     public List<RecipePlan> getAllRecipePlansByMealPlanId(Long mealPlanId) {
         MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntityById(mealPlanId);
-        return recipePlanRepository.findAllByMealPlan(mealPlanEntity).stream()
+        return recipePlanRepository.findAllWithRecipeByMealPlan(mealPlanEntity).stream()
                 .map(recipePlanEntityMapper::toRecipePlan)
                 .toList();
     }

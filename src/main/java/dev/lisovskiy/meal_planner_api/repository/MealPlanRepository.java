@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface MealPlanRepository extends JpaRepository<MealPlanEntity, Long> {
 
-    @EntityGraph(attributePaths = {"recipePlans"})
-    Optional<MealPlanEntity> findWithRecipePlansById(Long id);
+    @EntityGraph(attributePaths = {"recipePlans", "recipePlans.recipe"})
+    Optional<MealPlanEntity> findWithRecipesById(Long id);
 }
