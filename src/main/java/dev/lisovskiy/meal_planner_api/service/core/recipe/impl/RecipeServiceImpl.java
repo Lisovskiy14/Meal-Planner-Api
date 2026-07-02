@@ -4,7 +4,7 @@ import dev.lisovskiy.meal_planner_api.domain.Recipe;
 import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe.UpdateRecipeDto;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeEntity;
 import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.exception.conflict.impl.RecipeAlreadyExistsException;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.RecipeNotFoundException;

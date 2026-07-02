@@ -13,12 +13,11 @@ import dev.lisovskiy.meal_planner_api.dto.recipe_ingredient.CreateRecipeIngredie
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeIngredientRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientId;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.IngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeIngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeIngredientId;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
-import dev.lisovskiy.meal_planner_api.util.GlobalDtoSnippetsProvider;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipeDtoSnippetProvider;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeWebMapper;
@@ -41,7 +40,6 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

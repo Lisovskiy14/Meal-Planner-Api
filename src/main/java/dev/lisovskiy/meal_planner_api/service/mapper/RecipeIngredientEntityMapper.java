@@ -1,7 +1,7 @@
 package dev.lisovskiy.meal_planner_api.service.mapper;
 
 import dev.lisovskiy.meal_planner_api.domain.RecipeIngredient;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeIngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeIngredientEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

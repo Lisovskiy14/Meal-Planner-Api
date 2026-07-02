@@ -1,7 +1,7 @@
 package dev.lisovskiy.meal_planner_api.repository;
 
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipePlanEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

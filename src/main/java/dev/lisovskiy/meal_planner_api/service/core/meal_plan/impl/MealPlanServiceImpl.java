@@ -4,7 +4,7 @@ import dev.lisovskiy.meal_planner_api.domain.MealPlan;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.UpdateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanService;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.MealPlanNotFoundException;

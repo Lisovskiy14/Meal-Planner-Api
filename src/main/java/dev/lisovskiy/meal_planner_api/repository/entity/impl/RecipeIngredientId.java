@@ -1,4 +1,4 @@
-package dev.lisovskiy.meal_planner_api.repository.entity;
+package dev.lisovskiy.meal_planner_api.repository.entity.impl;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
