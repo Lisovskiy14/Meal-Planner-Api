@@ -1,6 +1,6 @@
 package dev.lisovskiy.meal_planner_api.dto.recipe_plan;
 
-import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeSummaryDto;
 import lombok.Value;
 
 import java.time.LocalTime;
@@ -8,7 +8,7 @@ import java.time.LocalTime;
 @Value
 public class RecipePlanDto {
     Long id;
-    RecipeDto recipe;
+    RecipeSummaryDto recipe;
     String description;
     LocalTime time;
 }

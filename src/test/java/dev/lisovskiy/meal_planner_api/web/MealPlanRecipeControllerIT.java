@@ -6,6 +6,7 @@ import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeSummaryDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanListDto;
@@ -235,10 +236,10 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
         );
 
         Long recipePlanId = actualResult.getId();
-        RecipeDto recipeDto = recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(recipeEntity));
+        RecipeSummaryDto recipeSummaryDto = recipeWebMapper.toRecipeSummaryDto(recipeEntityMapper.toRecipe(recipeEntity));
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeDto,
+                recipeSummaryDto,
                 description,
                 time
         );

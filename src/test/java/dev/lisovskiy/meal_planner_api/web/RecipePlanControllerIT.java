@@ -105,7 +105,7 @@ public class RecipePlanControllerIT extends AbstractIT {
 
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(
+                recipeWebMapper.toRecipeSummaryDto(recipeEntityMapper.toRecipe(
                         recipeEntity
                 )),
                 description,
@@ -228,7 +228,7 @@ public class RecipePlanControllerIT extends AbstractIT {
 
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeWebMapper.toRecipeDto(recipe),
+                recipeWebMapper.toRecipeSummaryDto(recipe),
                 updatedDescription,
                 updatedTime
         );
