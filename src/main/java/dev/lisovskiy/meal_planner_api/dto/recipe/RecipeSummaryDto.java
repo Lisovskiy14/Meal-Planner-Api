@@ -6,6 +6,6 @@ import lombok.Value;
 public class RecipeSummaryDto {
     Long id;
     String title;
-    String description;
+    String instructions;
     int prepTimeMinutes;
 }
