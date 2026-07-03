@@ -6,15 +6,16 @@ import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
 import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeSummaryDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanListDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipePlanEntity;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.RecipePlanDtoSnippetProvider;
@@ -125,7 +126,7 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
         assertThat(actualResult.getRecipePlans())
                 .hasSize(recipePlanEntities.size());
 
-        mealPlanEntity = mealPlanRepository.findWithRecipePlansById(mealPlanId).get();
+        mealPlanEntity = mealPlanRepository.findWithRecipesById(mealPlanId).get();
         assertThat(mealPlanEntity.getRecipePlans())
                 .extracting(RecipePlanEntity::getId)
                 .containsExactlyInAnyOrderElementsOf(
@@ -235,10 +236,10 @@ public class MealPlanRecipeControllerIT extends AbstractIT {
         );
 
         Long recipePlanId = actualResult.getId();
-        RecipeDto recipeDto = recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(recipeEntity));
+        RecipeSummaryDto recipeSummaryDto = recipeWebMapper.toRecipeSummaryDto(recipeEntityMapper.toRecipe(recipeEntity));
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeDto,
+                recipeSummaryDto,
                 description,
                 time
         );

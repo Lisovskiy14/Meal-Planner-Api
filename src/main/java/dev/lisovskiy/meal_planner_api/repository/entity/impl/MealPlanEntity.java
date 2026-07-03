@@ -1,5 +1,6 @@
-package dev.lisovskiy.meal_planner_api.repository.entity;
+package dev.lisovskiy.meal_planner_api.repository.entity.impl;
 
+import dev.lisovskiy.meal_planner_api.repository.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +15,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MealPlanEntity {
+public class MealPlanEntity implements BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meal_plan_seq_gen")

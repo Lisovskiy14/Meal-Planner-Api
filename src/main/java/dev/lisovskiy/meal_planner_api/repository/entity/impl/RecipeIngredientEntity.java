@@ -1,6 +1,7 @@
-package dev.lisovskiy.meal_planner_api.repository.entity;
+package dev.lisovskiy.meal_planner_api.repository.entity.impl;
 
 import dev.lisovskiy.meal_planner_api.common.IngredientUnit;
+import dev.lisovskiy.meal_planner_api.repository.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +12,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RecipeIngredientEntity {
+public class RecipeIngredientEntity implements BaseEntity {
 
     @EmbeddedId
     @Builder.Default

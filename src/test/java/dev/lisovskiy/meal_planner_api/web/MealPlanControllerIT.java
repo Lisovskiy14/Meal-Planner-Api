@@ -5,14 +5,10 @@ import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.lisovskiy.meal_planner_api.AbstractIT;
-import dev.lisovskiy.meal_planner_api.domain.RecipePlan;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.MealPlanListDto;
-import dev.lisovskiy.meal_planner_api.dto.meal_plan.UpdateMealPlanDto;
+import dev.lisovskiy.meal_planner_api.dto.meal_plan.*;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.RecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
 import dev.lisovskiy.meal_planner_api.service.mapper.MealPlanEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
 import dev.lisovskiy.meal_planner_api.util.MealPlanDtoSnippetProvider;
@@ -220,7 +216,6 @@ public class MealPlanControllerIT extends AbstractIT {
         // Arrange
         String description = "Meal Plan 1";
         DayOfWeek dayOfWeek = DayOfWeek.MONDAY;
-        List<RecipePlanDto> recipePlans = new ArrayList<>();
 
         CreateMealPlanDto createMealPlanDto = new CreateMealPlanDto(
                 description, dayOfWeek.toString()
@@ -239,14 +234,13 @@ public class MealPlanControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isCreated());
 
-        MealPlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
-                mvcResult, MealPlanDto.class, objectMapper
+        MealPlanSummaryDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, MealPlanSummaryDto.class, objectMapper
         );
 
-        MealPlanDto expectedResult = new MealPlanDto(
+        MealPlanSummaryDto expectedResult = new MealPlanSummaryDto(
                 actualResult.getId(),
                 description,
-                recipePlans,
                 dayOfWeek
         );
 
@@ -267,7 +261,10 @@ public class MealPlanControllerIT extends AbstractIT {
                                 .requestFields(
                                         MealPlanDtoSnippetProvider.getCreateOrUpdateMealPlanDtoFields()
                                 )
-                                .responseSchema(Schema.schema("MealPlanDto"))
+                                .responseSchema(Schema.schema("MealPlanSummaryDto"))
+                                .responseFields(
+                                        MealPlanDtoSnippetProvider.getMealPlanSummaryDtoFieldsWithPrefix("")
+                                )
                                 .build()
                 )
         ));
@@ -338,16 +335,14 @@ public class MealPlanControllerIT extends AbstractIT {
         Long mealPlanId = existingMealPlanEntity.getId();
         String newDescription = "New Description";
         DayOfWeek newDayOfWeek = DayOfWeek.TUESDAY;
-        List<RecipePlanDto> recipePlans = new ArrayList<>();
 
         UpdateMealPlanDto createMealPlanDto = new UpdateMealPlanDto(
                 newDescription, newDayOfWeek.toString()
         );
 
-        MealPlanDto expectedResult = new MealPlanDto(
+        MealPlanSummaryDto expectedResult = new MealPlanSummaryDto(
                 mealPlanId,
                 newDescription,
-                recipePlans,
                 newDayOfWeek
         );
 
@@ -364,15 +359,15 @@ public class MealPlanControllerIT extends AbstractIT {
         // Assert
         resultActions.andExpect(status().isOk());
 
-        MealPlanDto actualResult = GlobalExtractor.getObjectFromMvcResult(
-                mvcResult, MealPlanDto.class, objectMapper
+        MealPlanSummaryDto actualResult = GlobalExtractor.getObjectFromMvcResult(
+                mvcResult, MealPlanSummaryDto.class, objectMapper
         );
 
         assertThat(actualResult)
                 .isEqualTo(expectedResult);
 
-        MealPlanDto dbResult = mealPlanWebMapper.toMealPlanDto(mealPlanEntityMapper.toMealPlan(
-                mealPlanRepository.findWithRecipePlansById(mealPlanId).get()
+        MealPlanSummaryDto dbResult = mealPlanWebMapper.toMealPlanSummaryDto(mealPlanEntityMapper.toMealPlan(
+                mealPlanRepository.findById(mealPlanId).get()
         ));
         assertThat(dbResult)
                 .isEqualTo(expectedResult);
@@ -393,7 +388,7 @@ public class MealPlanControllerIT extends AbstractIT {
                                 .requestFields(
                                         MealPlanDtoSnippetProvider.getCreateOrUpdateMealPlanDtoFields()
                                 )
-                                .responseSchema(Schema.schema("MealPlanDto"))
+                                .responseSchema(Schema.schema("MealPlanSummaryDto"))
                                 .build()
                 )
         ));

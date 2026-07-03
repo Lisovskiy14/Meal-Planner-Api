@@ -4,7 +4,7 @@ import dev.lisovskiy.meal_planner_api.domain.MealPlan;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.CreateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.dto.meal_plan.UpdateMealPlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanService;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.MealPlanNotFoundException;
@@ -34,7 +34,7 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
     @Override
     @Transactional(readOnly = true)
     public MealPlan getMealPlanById(Long id) {
-        MealPlanEntity mealPlanEntity = getMealPlanEntityById(id);
+        MealPlanEntity mealPlanEntity = getMealPlanEntityWithRecipesById(id);
         return mealPlanEntityMapper.toMealPlan(mealPlanEntity);
     }
 
@@ -55,7 +55,7 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
     @Override
     @Transactional
     public MealPlan updateMealPlanById(Long id, UpdateMealPlanDto updateMealPlanDto) {
-        MealPlanEntity mealPlanEntity = getMealPlanEntityById(id);
+        MealPlanEntity mealPlanEntity = getMealPlanEntitySummaryById(id);
 
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(updateMealPlanDto.getDayOfWeek());
 
@@ -74,8 +74,14 @@ public class MealPlanServiceImpl implements MealPlanService, MealPlanServiceComm
 
     @Override
     @Transactional(readOnly = true)
-    public MealPlanEntity getMealPlanEntityById(Long id) {
+    public MealPlanEntity getMealPlanEntitySummaryById(Long id) {
         return mealPlanRepository.findById(id)
+                .orElseThrow(() -> new MealPlanNotFoundException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public MealPlanEntity getMealPlanEntityWithRecipesById(Long id) {
+        return mealPlanRepository.findWithRecipesById(id)
                 .orElseThrow(() -> new MealPlanNotFoundException(id));
     }
 }
