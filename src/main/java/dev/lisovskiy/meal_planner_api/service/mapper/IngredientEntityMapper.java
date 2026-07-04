@@ -1,7 +1,7 @@
 package dev.lisovskiy.meal_planner_api.service.mapper;
 
 import dev.lisovskiy.meal_planner_api.domain.Ingredient;
-import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.IngredientEntity;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

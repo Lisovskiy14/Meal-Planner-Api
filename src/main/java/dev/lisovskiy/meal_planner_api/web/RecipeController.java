@@ -1,10 +1,7 @@
 package dev.lisovskiy.meal_planner_api.web;
 
 import dev.lisovskiy.meal_planner_api.domain.Recipe;
-import dev.lisovskiy.meal_planner_api.dto.recipe.CreateRecipeDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe.RecipeListDto;
-import dev.lisovskiy.meal_planner_api.dto.recipe.UpdateRecipeDto;
+import dev.lisovskiy.meal_planner_api.dto.recipe.*;
 import dev.lisovskiy.meal_planner_api.dto.validation.ValidLongId;
 import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeFacade;
 import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeService;
@@ -35,7 +32,7 @@ public class RecipeController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new RecipeListDto(
                         recipes.stream()
-                                .map(recipeWebMapper::toRecipeDto)
+                                .map(recipeWebMapper::toRecipeSummaryDto)
                                 .toList()
                 ));
     }
@@ -59,14 +56,14 @@ public class RecipeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RecipeDto> updateRecipeById(
+    public ResponseEntity<RecipeSummaryDto> updateRecipeById(
             @PathVariable @ValidLongId Long id,
             @RequestBody @Validated UpdateRecipeDto updateRecipeDto
     ) {
         Recipe recipe = recipeService.updateRecipeById(id, updateRecipeDto);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(recipeWebMapper.toRecipeDto(recipe));
+                .body(recipeWebMapper.toRecipeSummaryDto(recipe));
     }
 
     @DeleteMapping("/{id}")

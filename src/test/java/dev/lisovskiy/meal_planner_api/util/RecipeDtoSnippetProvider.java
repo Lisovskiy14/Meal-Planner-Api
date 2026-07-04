@@ -16,7 +16,7 @@ public class RecipeDtoSnippetProvider {
                         .description("List of recipes")
         );
 
-        Stream<FieldDescriptor> nestedFields = getRecipeDtoFieldsWithPrefix("recipes[]")
+        Stream<FieldDescriptor> nestedFields = getRecipeSummaryDtoFieldsWithPrefix("recipes[]")
                 .stream();
 
         return Stream.concat(rootField, nestedFields)
@@ -27,14 +27,21 @@ public class RecipeDtoSnippetProvider {
         return getRecipeDtoFieldsWithPrefix("");
     }
 
-    public static List<FieldDescriptor> getEmptyRecipeDtoFields() {
-        return getEmptyRecipeDtoFieldsWithPrefix("");
+    public static List<FieldDescriptor> getRecipeSummaryDtoFields() {
+        return getRecipeSummaryDtoFieldsWithPrefix("");
     }
 
     public static List<FieldDescriptor> getRecipeDtoFieldsWithPrefix(String prefix) {
         String p = PrefixValidator.validate(prefix);
 
-        Stream<FieldDescriptor> rootFields = getEmptyRecipeDtoFieldsWithPrefix(p).stream();
+        Stream<FieldDescriptor> rootFields = Stream.concat(
+                getRecipeSummaryDtoFieldsWithPrefix(p).stream(),
+                Stream.of(
+                        fieldWithPath(p + "recipeIngredients")
+                                .type(JsonFieldType.ARRAY)
+                                .description("The list of ingredients for the recipe")
+                )
+        );
 
         Stream<FieldDescriptor> nestedFields = RecipeIngredientDtoSnippetProvider
                 .getRecipeIngredientDtoFieldsWithPrefix(p + "recipeIngredients[]").stream();
@@ -43,7 +50,18 @@ public class RecipeDtoSnippetProvider {
                 .toList();
     }
 
-    public static List<FieldDescriptor> getEmptyRecipeDtoFieldsWithPrefix(String prefix) {
+    public static List<FieldDescriptor> getEmptyRecipeDtoFields() {
+        return Stream.concat(
+                getRecipeSummaryDtoFields().stream(),
+                Stream.of(
+                        fieldWithPath("recipeIngredients")
+                                .type(JsonFieldType.ARRAY)
+                                .description("The list of ingredients for the recipe")
+                )
+        ).toList();
+    }
+
+    public static List<FieldDescriptor> getRecipeSummaryDtoFieldsWithPrefix(String prefix) {
         String p = PrefixValidator.validate(prefix);
 
         return List.of(
@@ -54,10 +72,7 @@ public class RecipeDtoSnippetProvider {
                 fieldWithPath(p + "instructions")
                         .description("Prepare instructions of recipe"),
                 fieldWithPath(p + "prepTimeMinutes")
-                        .description("Preparation time in minutes"),
-                fieldWithPath(p + "recipeIngredients")
-                        .type(JsonFieldType.ARRAY)
-                        .description("The list of ingredients for the recipe")
+                        .description("Preparation time in minutes")
         );
     }
 

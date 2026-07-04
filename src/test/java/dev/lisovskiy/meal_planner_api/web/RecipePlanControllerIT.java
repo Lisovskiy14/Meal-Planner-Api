@@ -11,12 +11,11 @@ import dev.lisovskiy.meal_planner_api.dto.recipe_plan.UpdateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.MealPlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
 import dev.lisovskiy.meal_planner_api.repository.RecipeRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipePlanEntity;
 import dev.lisovskiy.meal_planner_api.service.mapper.RecipeEntityMapper;
 import dev.lisovskiy.meal_planner_api.util.GlobalExtractor;
-import dev.lisovskiy.meal_planner_api.util.RecipeIngredientDtoSnippetProvider;
 import dev.lisovskiy.meal_planner_api.util.RecipePlanDtoSnippetProvider;
 import dev.lisovskiy.meal_planner_api.web.mapper.RecipeWebMapper;
 import lombok.SneakyThrows;
@@ -38,7 +37,6 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithNam
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -107,7 +105,7 @@ public class RecipePlanControllerIT extends AbstractIT {
 
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeWebMapper.toRecipeDto(recipeEntityMapper.toRecipe(
+                recipeWebMapper.toRecipeSummaryDto(recipeEntityMapper.toRecipe(
                         recipeEntity
                 )),
                 description,
@@ -230,7 +228,7 @@ public class RecipePlanControllerIT extends AbstractIT {
 
         RecipePlanDto expectedResult = new RecipePlanDto(
                 recipePlanId,
-                recipeWebMapper.toRecipeDto(recipe),
+                recipeWebMapper.toRecipeSummaryDto(recipe),
                 updatedDescription,
                 updatedTime
         );

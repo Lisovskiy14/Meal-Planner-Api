@@ -6,5 +6,5 @@ import java.util.List;
 
 @Value
 public class MealPlanListDto {
-    List<MealPlanDto> mealPlans;
+    List<MealPlanSummaryDto> mealPlans;
 }

@@ -30,7 +30,7 @@ public class RecipePlanDtoSnippetProvider {
         );
 
         Stream<FieldDescriptor> nestedFields = RecipeDtoSnippetProvider
-                .getEmptyRecipeDtoFieldsWithPrefix(p + "recipe").stream();
+                .getRecipeSummaryDtoFieldsWithPrefix(p + "recipe").stream();
 
         return Stream.concat(rootFields, nestedFields).toList();
     }

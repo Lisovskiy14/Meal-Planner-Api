@@ -4,7 +4,7 @@ import dev.lisovskiy.meal_planner_api.domain.Ingredient;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.UpdateIngredientDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.service.exception.conflict.impl.IngredientAlreadyExistsException;
 import dev.lisovskiy.meal_planner_api.service.exception.not_found.impl.IngredientNotFoundException;
 import dev.lisovskiy.meal_planner_api.service.core.ingredient.IngredientService;

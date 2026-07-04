@@ -4,9 +4,9 @@ import dev.lisovskiy.meal_planner_api.domain.RecipePlan;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.CreateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.dto.recipe_plan.UpdateRecipePlanDto;
 import dev.lisovskiy.meal_planner_api.repository.RecipePlanRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.MealPlanEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipeEntity;
-import dev.lisovskiy.meal_planner_api.repository.entity.RecipePlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.MealPlanEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipeEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.RecipePlanEntity;
 import dev.lisovskiy.meal_planner_api.service.core.meal_plan.MealPlanServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.core.recipe.RecipeServiceCommunicator;
 import dev.lisovskiy.meal_planner_api.service.core.recipe_plan.RecipePlanService;
@@ -33,8 +33,8 @@ public class RecipePlanServiceImpl implements RecipePlanService {
     @Override
     @Transactional(readOnly = true)
     public List<RecipePlan> getAllRecipePlansByMealPlanId(Long mealPlanId) {
-        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntityById(mealPlanId);
-        return recipePlanRepository.findAllByMealPlan(mealPlanEntity).stream()
+        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntitySummaryById(mealPlanId);
+        return recipePlanRepository.findAllWithRecipeByMealPlan(mealPlanEntity).stream()
                 .map(recipePlanEntityMapper::toRecipePlan)
                 .toList();
     }
@@ -42,15 +42,15 @@ public class RecipePlanServiceImpl implements RecipePlanService {
     @Override
     @Transactional(readOnly = true)
     public RecipePlan getRecipePlanById(Long recipePlanId) {
-        RecipePlanEntity recipePlanEntity = getRecipePlanEntityById(recipePlanId);
+        RecipePlanEntity recipePlanEntity = getRecipePlanEntityWithRecipeById(recipePlanId);
         return recipePlanEntityMapper.toRecipePlan(recipePlanEntity);
     }
 
     @Override
     @Transactional
     public RecipePlan createRecipePlan(Long mealPlanId, CreateRecipePlanDto createRecipePlanDto) {
-        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntityById(mealPlanId);
-        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntityById(createRecipePlanDto.getRecipeId());
+        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntitySummaryById(mealPlanId);
+        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntitySummaryById(createRecipePlanDto.getRecipeId());
 
         LocalTime time = LocalTime.parse(createRecipePlanDto.getTime());
         checkForConflict(time, mealPlanId);
@@ -69,12 +69,12 @@ public class RecipePlanServiceImpl implements RecipePlanService {
     @Override
     @Transactional
     public RecipePlan updateRecipePlanById(Long recipePlanId, UpdateRecipePlanDto updateRecipePlanDto) {
-        RecipePlanEntity recipePlanEntity = getRecipePlanEntityById(recipePlanId);
+        RecipePlanEntity recipePlanEntity = getRecipePlanEntitySummaryById(recipePlanId);
 
-        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntityById(
+        MealPlanEntity mealPlanEntity = mealPlanServiceCommunicator.getMealPlanEntitySummaryById(
                 updateRecipePlanDto.getMealPlanId()
         );
-        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntityById(
+        RecipeEntity recipeEntity = recipeServiceCommunicator.getRecipeEntitySummaryById(
                 updateRecipePlanDto.getRecipeId()
         );
 
@@ -96,7 +96,12 @@ public class RecipePlanServiceImpl implements RecipePlanService {
         recipePlanRepository.deleteById(recipePlanId);
     }
 
-    private RecipePlanEntity getRecipePlanEntityById(Long recipePlanId) {
+    private RecipePlanEntity getRecipePlanEntityWithRecipeById(Long recipePlanId) {
+        return recipePlanRepository.findWithRecipeById(recipePlanId)
+                .orElseThrow(() -> new RecipePlanNotFoundException(recipePlanId));
+    }
+
+    private RecipePlanEntity getRecipePlanEntitySummaryById(Long recipePlanId) {
         return recipePlanRepository.findById(recipePlanId)
                 .orElseThrow(() -> new RecipePlanNotFoundException(recipePlanId));
     }

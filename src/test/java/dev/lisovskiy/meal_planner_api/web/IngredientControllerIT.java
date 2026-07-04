@@ -14,7 +14,7 @@ import dev.lisovskiy.meal_planner_api.dto.ingredient.CreateIngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientDto;
 import dev.lisovskiy.meal_planner_api.dto.ingredient.IngredientListDto;
 import dev.lisovskiy.meal_planner_api.repository.IngredientRepository;
-import dev.lisovskiy.meal_planner_api.repository.entity.IngredientEntity;
+import dev.lisovskiy.meal_planner_api.repository.entity.impl.IngredientEntity;
 import dev.lisovskiy.meal_planner_api.web.mapper.IngredientWebMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
